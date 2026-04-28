@@ -106,13 +106,13 @@
 **Описание:** Сервис для получения данных с Open-Meteo Archive API и Forecast API.
 **DoD:**
 
-- [ ] `app/services/weather/open_meteo.py`
-- [ ] Метод `fetch_historical(lat, lon, date_from, date_to) -> List[WeatherDailyDTO]`
-- [ ] Метод `fetch_forecast(lat, lon, days=16) -> List[WeatherDailyDTO]`
-- [ ] Маппинг полей API → модель БД
-- [ ] Расчёт VPD из T и RH в этом же сервисе
-- [ ] Retry с экспоненциальной задержкой (tenacity)
-- [ ] Тест с замоканным httpx
+- [x] `app/services/weather/open_meteo.py`
+- [x] Метод `fetch_historical(lat, lon, date_from, date_to) -> List[WeatherDailyDTO]`
+- [x] Метод `fetch_forecast(lat, lon, days=16) -> List[WeatherDailyDTO]`
+- [x] Маппинг полей API → модель БД
+- [x] Расчёт VPD из T и RH в этом же сервисе
+- [x] Retry с экспоненциальной задержкой (tenacity)
+- [x] Тест с замоканным httpx
 
 ### 1.7 🔧 BE — Клиент NASA POWER
 
