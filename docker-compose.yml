@@ -24,21 +24,17 @@ services:
       start_period: 30s
 
   backend:
-    # TODO(task 1.1): replace `image` with `build: ./backend` and remove `command`.
-    image: python:3.11-slim
+    build: ./backend
     container_name: weather-backend
     restart: unless-stopped
-    working_dir: /app
     env_file: .env
     volumes:
-      - ./backend:/app
       - uploads:/uploads
     depends_on:
       db:
         condition: service_healthy
     networks:
       - weather-net
-    command: ["tail", "-f", "/dev/null"]
 
   frontend:
     # TODO(task 2.1): replace `image` with `build: ./frontend` and remove `command`.
@@ -68,15 +64,11 @@ services:
       - weather-net
 
   telegram_bot:
-    # TODO(task 4.x): replace `image` with `build: ./backend` and switch command
-    # to `python -m app.telegram_bot` once bot module exists.
-    image: python:3.11-slim
+    # Same image as backend; bot entrypoint lands in task 4.x.
+    build: ./backend
     container_name: weather-telegram-bot
     restart: unless-stopped
-    working_dir: /app
     env_file: .env
-    volumes:
-      - ./backend:/app
     depends_on:
       db:
         condition: service_healthy

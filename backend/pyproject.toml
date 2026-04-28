@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weather-agro-backend"
+version = "0.1.0"
+description = "Weather Agro — backend (FastAPI + TimescaleDB)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.32,<1.0",
+    "pydantic>=2.9,<3.0",
+    "pydantic-settings>=2.5,<3.0",
+    "sqlalchemy>=2.0,<3.0",
+    "alembic>=1.13,<2.0",
+    "asyncpg>=0.29,<1.0",
+    "httpx>=0.27,<1.0",
+    "apscheduler>=3.10,<4.0",
+    "python-jose[cryptography]>=3.3,<4.0",
+    "bcrypt>=4.2,<5.0",
+    "passlib[bcrypt]>=1.7,<2.0",
+    "structlog>=24.4,<25.0",
+    "tenacity>=9.0,<10.0",
+    "python-multipart>=0.0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<9.0",
+    "pytest-asyncio>=0.24,<1.0",
+    "pytest-cov>=5.0,<6.0",
+    "ruff>=0.6,<1.0",
+    "mypy>=1.11,<2.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "ASYNC", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true

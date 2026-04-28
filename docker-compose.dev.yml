@@ -17,8 +17,13 @@ services:
     environment:
       ENVIRONMENT: development
       LOG_LEVEL: DEBUG
-    # TODO(task 1.1): override command with:
-    # command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./backend:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  telegram_bot:
+    volumes:
+      - ./backend:/app
 
   frontend:
     ports:

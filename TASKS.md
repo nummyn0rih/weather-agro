@@ -44,12 +44,12 @@
 **Описание:** Базовый каркас FastAPI с роутингом и конфигом.
 **DoD:**
 
-- [ ] `pyproject.toml` с зависимостями (fastapi, sqlalchemy, alembic, pydantic, httpx, apscheduler, python-jose, bcrypt, asyncpg)
-- [ ] Структура `app/` согласно PRD
-- [ ] `app/main.py` с CORS, health-check `GET /api/health`
-- [ ] `app/core/config.py` (Pydantic Settings, чтение `.env`)
-- [ ] Логирование (structlog или logging)
-- [ ] Swagger доступен на `/api/docs`
+- [x] `pyproject.toml` с зависимостями (fastapi, sqlalchemy, alembic, pydantic, httpx, apscheduler, python-jose, bcrypt, asyncpg)
+- [x] Структура `app/` согласно PRD
+- [x] `app/main.py` с CORS, health-check `GET /api/health`
+- [x] `app/core/config.py` (Pydantic Settings, чтение `.env`)
+- [x] Логирование (structlog или logging)
+- [x] Swagger доступен на `/api/docs`
 
 ### 1.2 🔧 BE — Подключение БД и миграции
 
