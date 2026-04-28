@@ -67,10 +67,10 @@
 **Описание:** Создать все модели согласно PRD раздел 6.
 **DoD:**
 
-- [ ] Модели: `User`, `Location`, `Crop`, `LocationCrop`, `WeatherDaily`, `WeatherForecast`, `FieldEvent`, `AlertRule`, `AlertHistory`, `Setting`
-- [ ] Миграция создаёт все таблицы
-- [ ] `weather_daily` и `weather_forecast` — hypertables (через `SELECT create_hypertable`)
-- [ ] Сидер для справочника `crops` с базовыми температурами
+- [x] Модели: `User`, `Location`, `Crop`, `LocationCrop`, `WeatherDaily`, `WeatherForecast`, `FieldEvent`, `AlertRule`, `AlertHistory`, `Setting`
+- [x] Миграция создаёт все таблицы
+- [x] `weather_daily` и `weather_forecast` — hypertables (через `SELECT create_hypertable`)
+- [x] Сидер для справочника `crops` с базовыми температурами
 
 ### 1.4 🔧 BE — Аутентификация JWT
 

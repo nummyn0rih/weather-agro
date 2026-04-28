@@ -7,7 +7,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import get_settings
-from app.db.base import Base  # noqa: F401  ← model modules imported here register metadata
+from app.db import models as _models  # noqa: F401  ← register all model metadata
+from app.db.base import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().DATABASE_URL)
