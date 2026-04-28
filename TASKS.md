@@ -130,11 +130,11 @@
 **Описание:** Чистые функции для производных параметров.
 **DoD:**
 
-- [ ] `app/services/analytics/calculators.py`
-- [ ] `calculate_vpd(temp_c, humidity_pct) -> float`
-- [ ] `calculate_gdd(temp_min, temp_max, base_temp) -> float`
-- [ ] `calculate_frost_hours(hourly_temps) -> int`
-- [ ] Unit-тесты с известными значениями
+- [x] `app/services/analytics/calculators.py`
+- [x] `calculate_vpd(temp_c, humidity_pct) -> float`
+- [x] `calculate_gdd(temp_min, temp_max, base_temp) -> float`
+- [x] `calculate_frost_hours(hourly_temps) -> int`
+- [x] Unit-тесты с известными значениями
 
 ### 1.9 🔧 BE — Загрузка истории при добавлении локации
 
