@@ -93,13 +93,13 @@
 **Зависит от:** → 1.4
 **DoD:**
 
-- [ ] `GET /api/locations` — список с фильтрами (region, type)
-- [ ] `POST /api/locations` — создать
-- [ ] `GET /api/locations/{id}` — детали
-- [ ] `PUT /api/locations/{id}` — обновить
-- [ ] `DELETE /api/locations/{id}`
-- [ ] Pydantic-схемы (LocationCreate, LocationUpdate, LocationResponse)
-- [ ] Тесты для всех эндпоинтов
+- [x] `GET /api/locations` — список с фильтрами (region, type)
+- [x] `POST /api/locations` — создать
+- [x] `GET /api/locations/{id}` — детали
+- [x] `PUT /api/locations/{id}` — обновить
+- [x] `DELETE /api/locations/{id}`
+- [x] Pydantic-схемы (LocationCreate, LocationUpdate, LocationResponse)
+- [x] Тесты для всех эндпоинтов
 
 ### 1.6 🔧 BE — Клиент Open-Meteo
 
