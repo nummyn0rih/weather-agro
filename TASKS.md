@@ -78,14 +78,14 @@
 **Зависит от:** → 1.3
 **DoD:**
 
-- [ ] `POST /api/auth/login` (возвращает access + refresh токены)
-- [ ] `POST /api/auth/refresh`
-- [ ] `POST /api/auth/logout`
-- [ ] Dependency `get_current_user`
-- [ ] Bcrypt для хеширования
-- [ ] Rate limiting на login (slowapi)
-- [ ] Тест: успешный логин, неверный пароль, refresh
-- [ ] Сидер: создаёт admin-пользователя из `ADMIN_USERNAME`/`ADMIN_PASSWORD`
+- [x] `POST /api/auth/login` (возвращает access + refresh токены)
+- [x] `POST /api/auth/refresh`
+- [x] `POST /api/auth/logout`
+- [x] Dependency `get_current_user`
+- [x] Bcrypt для хеширования
+- [x] Rate limiting на login (slowapi)
+- [x] Тест: успешный логин, неверный пароль, refresh
+- [x] Сидер: создаёт admin-пользователя из `ADMIN_USERNAME`/`ADMIN_PASSWORD`
 
 ### 1.5 🔧 BE — CRUD локаций
 
