@@ -56,11 +56,11 @@
 **Описание:** SQLAlchemy 2.0 + Alembic + TimescaleDB.
 **DoD:**
 
-- [ ] `app/db/session.py` (async engine, session factory)
-- [ ] Базовая модель в `app/db/base.py`
-- [ ] Alembic настроен (`alembic init`)
-- [ ] Первая миграция: создание расширения TimescaleDB
-- [ ] Healthcheck эндпоинт проверяет соединение с БД
+- [x] `app/db/session.py` (async engine, session factory)
+- [x] Базовая модель в `app/db/base.py`
+- [x] Alembic настроен (`alembic init`)
+- [x] Первая миграция: создание расширения TimescaleDB
+- [x] Healthcheck эндпоинт проверяет соединение с БД
 
 ### 1.3 🔧 BE — Модели БД (все таблицы)
 

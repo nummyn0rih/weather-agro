@@ -82,6 +82,12 @@ coverage/
 ehthumbs.db
 Thumbs.db
 desktop.ini
+*:Zone.Identifier
+
+# ==============================================
+# Claude Code harness state
+# ==============================================
+.claude/
 
 # ==============================================
 # App-specific
