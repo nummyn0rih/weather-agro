@@ -5,6 +5,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 
+ImportStatus = str  # 'pending' | 'in_progress' | 'done' | 'error'
+
 
 class Location(Base):
     __tablename__ = "locations"
@@ -19,6 +21,17 @@ class Location(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+    # History import tracking (set by background task)
+    import_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="pending"
+    )
+    import_progress: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
+    import_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    import_finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    import_error: Mapped[str | None] = mapped_column(Text)
 
 
 class LocationCrop(Base):

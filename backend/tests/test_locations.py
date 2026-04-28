@@ -4,6 +4,7 @@ from typing import AsyncIterator
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api import locations as locations_api
 from app.api.deps import get_current_user
 from app.db.models import Location, User
 from app.db.session import get_db
@@ -28,6 +29,8 @@ def _make_loc(
         type=type_,
         note=None,
         created_at=_NOW,
+        import_status="pending",
+        import_progress=0,
     )
 
 
@@ -48,7 +51,13 @@ def client(monkeypatch):
 
     async def fake_create(_session, data):
         new_id = max(store.keys(), default=0) + 1
-        loc = Location(id=new_id, created_at=_NOW, **data.model_dump())
+        loc = Location(
+            id=new_id,
+            created_at=_NOW,
+            import_status="pending",
+            import_progress=0,
+            **data.model_dump(),
+        )
         store[new_id] = loc
         return loc
 
@@ -62,11 +71,34 @@ def client(monkeypatch):
     async def fake_delete(_session, lid):
         return store.pop(lid, None) is not None
 
+    async def fake_status(_session, lid):
+        loc = store.get(lid)
+        if loc is None:
+            return None
+        from app.schemas.location import LocationImportStatus
+
+        return LocationImportStatus(
+            location_id=loc.id,
+            status=loc.import_status,
+            progress=loc.import_progress,
+            started_at=loc.import_started_at,
+            finished_at=loc.import_finished_at,
+            error=loc.import_error,
+        )
+
     monkeypatch.setattr(location_service, "list_locations", fake_list)
     monkeypatch.setattr(location_service, "get_location", fake_get)
     monkeypatch.setattr(location_service, "create_location", fake_create)
     monkeypatch.setattr(location_service, "update_location", fake_update)
     monkeypatch.setattr(location_service, "delete_location", fake_delete)
+    monkeypatch.setattr(location_service, "get_import_status", fake_status)
+
+    async def noop_backfill(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr(
+        locations_api.backfill_service, "run_backfill", noop_backfill
+    )
 
     async def fake_user() -> User:
         return User(id=1, username="admin", password_hash="x")
@@ -126,6 +158,21 @@ def test_create_location(client) -> None:
     body = response.json()
     assert body["name"] == "Field B"
     assert body["id"] == 2
+    assert body["import_status"] == "pending"
+    assert body["import_progress"] == 0
+
+
+def test_import_status_endpoint(client) -> None:
+    response = client.get("/api/locations/1/import-status")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["location_id"] == 1
+    assert body["status"] == "pending"
+    assert body["progress"] == 0
+
+
+def test_import_status_404(client) -> None:
+    assert client.get("/api/locations/999/import-status").status_code == 404
 
 
 def test_create_rejects_invalid_lat(client) -> None:

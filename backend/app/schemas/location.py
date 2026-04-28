@@ -35,3 +35,18 @@ class LocationResponse(LocationBase):
 
     id: int
     created_at: datetime
+    import_status: Literal["pending", "in_progress", "done", "error"]
+    import_progress: int
+
+
+class LocationImportStatus(BaseModel):
+    """Progress snapshot for the per-location history backfill task."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    location_id: int
+    status: Literal["pending", "in_progress", "done", "error"]
+    progress: int = Field(..., ge=0, le=100)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    error: str | None = None

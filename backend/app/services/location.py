@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Location
-from app.schemas.location import LocationCreate, LocationUpdate
+from app.schemas.location import LocationCreate, LocationImportStatus, LocationUpdate
 
 
 async def list_locations(
@@ -55,3 +55,19 @@ async def delete_location(session: AsyncSession, location_id: int) -> bool:
     await session.delete(obj)
     await session.commit()
     return True
+
+
+async def get_import_status(
+    session: AsyncSession, location_id: int
+) -> LocationImportStatus | None:
+    obj = await get_location(session, location_id)
+    if not obj:
+        return None
+    return LocationImportStatus(
+        location_id=obj.id,
+        status=obj.import_status,
+        progress=obj.import_progress,
+        started_at=obj.import_started_at,
+        finished_at=obj.import_finished_at,
+        error=obj.import_error or None,
+    )

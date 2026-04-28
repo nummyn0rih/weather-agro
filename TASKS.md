@@ -136,18 +136,18 @@
 - [x] `calculate_frost_hours(hourly_temps) -> int`
 - [x] Unit-тесты с известными значениями
 
-### 1.9 🔧 BE — Загрузка истории при добавлении локации
+### 1.9 🔧 BE — Загрузка истории при добавлении локации ✅
 
 **Описание:** Background task на 10 лет назад.
 **Зависит от:** → 1.5, 1.6, 1.7
 **DoD:**
 
-- [ ] При `POST /api/locations` запускается background task (FastAPI BackgroundTasks)
-- [ ] Загрузка чанками по 1 году (чтобы не упереться в лимиты API)
-- [ ] Сохранение прогресса в `Location.import_status` (`pending` / `in_progress` / `done` / `error`)
-- [ ] `Location.import_progress` (0–100)
-- [ ] `GET /api/locations/{id}/import-status`
-- [ ] Идемпотентность: повторный запуск не дублирует данные (UPSERT)
+- [x] При `POST /api/locations` запускается background task (FastAPI BackgroundTasks)
+- [x] Загрузка чанками по 1 году (чтобы не упереться в лимиты API)
+- [x] Сохранение прогресса в `Location.import_status` (`pending` / `in_progress` / `done` / `error`)
+- [x] `Location.import_progress` (0–100)
+- [x] `GET /api/locations/{id}/import-status`
+- [x] Идемпотентность: повторный запуск не дублирует данные (UPSERT)
 
 ### 1.10 🔧 BE — Эндпоинт получения погодных данных
 
