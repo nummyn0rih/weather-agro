@@ -1,0 +1,34 @@
+# Dev override — applied with:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Adds:
+# - host port mappings for direct access (db, backend, frontend)
+# - dev environment defaults
+# - hot-reload commands land in tasks 1.1 (uvicorn --reload) and 2.1 (pnpm dev)
+
+services:
+  db:
+    ports:
+      - "5432:5432"
+
+  backend:
+    ports:
+      - "8000:8000"
+    environment:
+      ENVIRONMENT: development
+      LOG_LEVEL: DEBUG
+    # TODO(task 1.1): override command with:
+    # command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+    # TODO(task 2.1): override command with:
+    # command: ["pnpm", "dev", "--host", "0.0.0.0"]
+
+  nginx:
+    # Dev exposes nginx on 8080 to avoid clashing with anything binding :80 on host.
+    ports:
+      - "8080:80"

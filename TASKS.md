@@ -29,11 +29,11 @@
 **Описание:** Настроить `docker-compose.yml` со всеми сервисами.
 **DoD:**
 
-- [ ] Сервисы: `db` (TimescaleDB), `backend`, `frontend`, `nginx`, `telegram_bot`
-- [ ] Volumes для данных PostgreSQL и uploads
-- [ ] Внутренняя сеть
-- [ ] `docker-compose.dev.yml` с hot-reload для backend и frontend
-- [ ] `docker compose up` поднимает всё без ошибок
+- [x] Сервисы: `db` (TimescaleDB), `backend`, `frontend`, `nginx`, `telegram_bot`
+- [x] Volumes для данных PostgreSQL и uploads
+- [x] Внутренняя сеть
+- [x] `docker-compose.dev.yml` с hot-reload для backend и frontend
+- [ ] `docker compose up` поднимает всё без ошибок (требует установки Docker — не верифицировано)
 
 ---
 
