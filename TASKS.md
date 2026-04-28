@@ -119,11 +119,11 @@
 **Описание:** Сервис для NASA POWER API (исторические данные).
 **DoD:**
 
-- [ ] `app/services/weather/nasa_power.py`
-- [ ] Метод `fetch_historical(lat, lon, date_from, date_to)`
-- [ ] Маппинг полей (учесть отсутствие некоторых параметров)
-- [ ] Retry
-- [ ] Тест с замоканным ответом
+- [x] `app/services/weather/nasa_power.py`
+- [x] Метод `fetch_historical(lat, lon, date_from, date_to)`
+- [x] Маппинг полей (учесть отсутствие некоторых параметров)
+- [x] Retry
+- [x] Тест с замоканным ответом
 
 ### 1.8 🔧 BE — Сервис расчётов (GDD, VPD, frost_hours)
 
