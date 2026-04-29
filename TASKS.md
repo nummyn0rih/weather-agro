@@ -296,8 +296,8 @@
 **Зависит от:** → 3.3
 **DoD:**
 
-- [ ] `GET /api/analytics/anomalies` — данные с пометкой степени отклонения (none / >1σ / >2σ)
-- [ ] Параметры: location_id, parameter, date_from, date_to
+- [x] `GET /api/analytics/anomalies` — данные с пометкой степени отклонения (none / >1σ / >2σ)
+- [x] Параметры: location_id, parameter, date_from, date_to
 
 ### 3.5 🔧 BE — Корреляции
 

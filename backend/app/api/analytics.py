@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 import structlog
@@ -7,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.db.models import User
 from app.db.session import get_db
-from app.schemas.analytics import ClimateNormalRow, NormalPeriod
+from app.schemas.analytics import AnomalyRow, ClimateNormalRow, NormalPeriod
+from app.schemas.weather import WeatherSource
+from app.services.analytics import anomalies as anomalies_service
 from app.services.analytics import climate_normals as normals_service
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -87,3 +90,42 @@ async def get_climate_normals(
         }
         for r in cached
     ]
+
+
+@router.get(
+    "/anomalies",
+    response_model=list[AnomalyRow],
+    summary="Daily deviations from cached climate normals (none / >1σ / >2σ)",
+)
+async def get_anomalies(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    _user: Annotated[User, Depends(get_current_user)],
+    location_id: Annotated[int, Query()],
+    parameter: Annotated[str, Query()],
+    date_from: Annotated[date, Query()],
+    date_to: Annotated[date, Query()],
+    period: Annotated[NormalPeriod, Query()] = "month",
+    source: Annotated[WeatherSource, Query()] = "average",
+) -> list[dict]:
+    try:
+        rows = await anomalies_service.get_anomalies(
+            session,
+            location_id=location_id,
+            parameter=parameter,
+            date_from=date_from,
+            date_to=date_to,
+            period=period,
+            source=source,
+        )
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    log.info(
+        "analytics.anomalies",
+        location_id=location_id,
+        parameter=parameter,
+        period=period,
+        source=source,
+        rows=len(rows),
+    )
+    return rows
