@@ -186,12 +186,12 @@
 **Описание:** Базовый каркас фронтенда.
 **DoD:**
 
-- [ ] `pnpm create vite` с шаблоном React+TS
-- [ ] Tailwind CSS установлен и настроен
-- [ ] shadcn/ui инициализирован (`npx shadcn-ui init`)
-- [ ] ESLint + Prettier настроены
-- [ ] `tsconfig.json` строгий режим
-- [ ] Алиасы путей (`@/components`, `@/lib`)
+- [x] `pnpm create vite` с шаблоном React+TS
+- [x] Tailwind CSS установлен и настроен
+- [x] shadcn/ui инициализирован (`npx shadcn-ui init`)
+- [x] ESLint + Prettier настроены
+- [x] `tsconfig.json` строгий режим
+- [x] Алиасы путей (`@/components`, `@/lib`)
 
 ### 2.2 ⚙️ FE-F — API-клиент и TanStack Query
 

@@ -37,17 +37,14 @@ services:
       - weather-net
 
   frontend:
-    # TODO(task 2.1): replace `image` with `build: ./frontend` and remove `command`.
-    image: node:20-alpine
+    build:
+      context: ./frontend
+      target: runtime
     container_name: weather-frontend
     restart: unless-stopped
-    working_dir: /app
     env_file: .env
-    volumes:
-      - ./frontend:/app
     networks:
       - weather-net
-    command: ["tail", "-f", "/dev/null"]
 
   nginx:
     image: nginx:1.27-alpine
