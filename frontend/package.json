@@ -14,6 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.100.6",
+    "axios": "^1.15.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.460.0",
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@tanstack/react-query-devtools": "^5.100.6",
     "@types/node": "^22.9.3",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

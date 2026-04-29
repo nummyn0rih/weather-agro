@@ -199,11 +199,11 @@
 **Зависит от:** → 2.1
 **DoD:**
 
-- [ ] `src/lib/api.ts` — axios или fetch wrapper
-- [ ] Перехват 401 → redirect на `/login`
-- [ ] Автоматическое добавление JWT в заголовки
-- [ ] Refresh-токен механика (auto-retry на 401)
-- [ ] TanStack Query Provider в `App.tsx`
+- [x] `src/lib/api.ts` — axios или fetch wrapper
+- [x] Перехват 401 → redirect на `/login`
+- [x] Автоматическое добавление JWT в заголовки
+- [x] Refresh-токен механика (auto-retry на 401)
+- [x] TanStack Query Provider в `App.tsx`
 
 ### 2.3 ⚙️ FE-F — Аутентификация (страница логина)
 
