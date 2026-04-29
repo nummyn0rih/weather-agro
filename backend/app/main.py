@@ -14,6 +14,7 @@ from app.api.locations import router as locations_router
 from app.api.weather import router as weather_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.scheduler import create_scheduler
 
 
 @asynccontextmanager
@@ -22,8 +23,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     log = structlog.get_logger()
     settings = get_settings()
     log.info("app.startup", environment=settings.ENVIRONMENT, log_level=settings.LOG_LEVEL)
-    yield
-    log.info("app.shutdown")
+
+    scheduler = create_scheduler()
+    scheduler.start()
+    app.state.scheduler = scheduler
+    log.info("scheduler.started", jobs=[j.id for j in scheduler.get_jobs()])
+
+    try:
+        yield
+    finally:
+        scheduler.shutdown(wait=False)
+        log.info("scheduler.stopped")
+        log.info("app.shutdown")
 
 
 def create_app() -> FastAPI:

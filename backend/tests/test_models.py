@@ -15,6 +15,7 @@ EXPECTED_TABLES = {
     "alert_rules",
     "alert_history",
     "settings",
+    "scheduler_logs",
 }
 
 
