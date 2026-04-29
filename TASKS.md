@@ -304,9 +304,9 @@
 **Описание:** Расчёт матрицы корреляций Пирсона.
 **DoD:**
 
-- [ ] `GET /api/analytics/correlations` — параметры: location_id, parameters[], date_from, date_to
-- [ ] Возвращает матрицу NxN с коэффициентами
-- [ ] Использовать numpy/pandas для расчёта
+- [x] `GET /api/analytics/correlations` — параметры: location_id, parameters[], date_from, date_to
+- [x] Возвращает матрицу NxN с коэффициентами
+- [x] Использовать numpy/pandas для расчёта
 
 ### 3.6 ⚙️ FE-F — Страница «Графики»
 

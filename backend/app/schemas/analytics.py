@@ -42,3 +42,18 @@ class AnomalyRow(BaseModel):
     level: AnomalyLevel
     bucket: int
     period: NormalPeriod
+
+
+class CorrelationMatrix(BaseModel):
+    """Pearson correlation matrix between requested parameters.
+
+    ``matrix[i][j]`` holds the Pearson coefficient between parameters[i] and
+    parameters[j]; ``None`` when the paired sample has fewer than 2 valid
+    observations or one of the series has zero variance. ``counts[i][j]`` is
+    the number of paired observations actually used for that cell.
+    """
+
+    parameters: list[str]
+    matrix: list[list[float | None]]
+    counts: list[list[int]]
+    n: int
