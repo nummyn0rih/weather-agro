@@ -284,11 +284,11 @@
 **Описание:** Расчёт многолетних норм.
 **DoD:**
 
-- [ ] Сервис `app/services/analytics/climate_normals.py`
-- [ ] `calculate_normals(location_id, parameter, period='month')` → mean, std, min, max за все доступные годы
-- [ ] Кэширование результатов в таблице `climate_normals`
-- [ ] Cron-задача обновления раз в месяц
-- [ ] `GET /api/analytics/normals?location_id=X&parameter=Y`
+- [x] Сервис `app/services/analytics/climate_normals.py`
+- [x] `calculate_normals(location_id, parameter, period='month')` → mean, std, min, max за все доступные годы
+- [x] Кэширование результатов в таблице `climate_normals`
+- [x] Cron-задача обновления раз в месяц
+- [x] `GET /api/analytics/normals?location_id=X&parameter=Y`
 
 ### 3.4 🔧 BE — Аномалии
 

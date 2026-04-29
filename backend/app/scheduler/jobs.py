@@ -27,12 +27,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.models import Location, SchedulerLog
 from app.db.session import async_session_factory
+from app.services.analytics import climate_normals as normals_service
 from app.services.weather import ingest, nasa_power, open_meteo
 
 logger = structlog.get_logger(__name__)
 
 DAILY_INGEST_JOB_ID = "daily_ingest"
 FORECAST_REFRESH_JOB_ID = "forecast_refresh"
+CLIMATE_NORMALS_JOB_ID = "climate_normals_recompute"
 
 
 async def _list_locations(session: AsyncSession) -> list[Location]:
@@ -227,5 +229,24 @@ async def forecast_refresh_job(
     await _run_with_log(
         FORECAST_REFRESH_JOB_ID,
         _refresh_forecast,
+        session_factory=session_factory,
+    )
+
+
+async def _recompute_climate_normals(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> int:
+    """Recompute climate normals for every location. Returns rows written."""
+    async with session_factory() as session:
+        return await normals_service.recompute_all(session)
+
+
+async def climate_normals_job(
+    session_factory: async_sessionmaker[AsyncSession] | None = None,
+) -> None:
+    """Entry point for the 1st-of-month climate normals recompute job."""
+    await _run_with_log(
+        CLIMATE_NORMALS_JOB_ID,
+        _recompute_climate_normals,
         session_factory=session_factory,
     )

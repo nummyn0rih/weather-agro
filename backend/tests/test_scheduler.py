@@ -282,7 +282,11 @@ def test_create_scheduler_registers_default_jobs() -> None:
     assert ids == {
         jobs_mod.DAILY_INGEST_JOB_ID,
         jobs_mod.FORECAST_REFRESH_JOB_ID,
+        jobs_mod.CLIMATE_NORMALS_JOB_ID,
     }
     # Daily ingest must trigger at 03:00 Europe/Moscow.
     daily = sched.get_job(jobs_mod.DAILY_INGEST_JOB_ID)
     assert str(daily.trigger.timezone) == "Europe/Moscow"
+    # Climate normals must trigger on day 1 of every month.
+    normals = sched.get_job(jobs_mod.CLIMATE_NORMALS_JOB_ID)
+    assert str(normals.trigger.timezone) == "Europe/Moscow"
