@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { queryClient } from '@/lib/query-client';
+import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import { ChartsPage } from '@/pages/ChartsPage';
 import { HomePage } from '@/pages/HomePage';
 import { LocationsPage } from '@/pages/LocationsPage';
@@ -28,10 +29,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/charts" element={<ChartsPage />} />
             <Route path="/tables" element={<TablesPage />} />
-            <Route
-              path="/analytics"
-              element={<StubPage title="Аналитика" />}
-            />
+            <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/events" element={<StubPage title="События" />} />
             <Route path="/locations" element={<LocationsPage />} />
             <Route path="/alerts" element={<StubPage title="Алерты" />} />
