@@ -7,6 +7,13 @@ export type WeatherSource =
   | 'average';
 
 export type Aggregation = 'day' | 'week' | 'month' | 'season' | 'year';
+export type StatsAggregation =
+  | 'day'
+  | 'week'
+  | 'month'
+  | 'season'
+  | 'year'
+  | 'total';
 export type HeatmapXAxis = 'month' | 'week' | 'doy';
 export type CumulativeParameter =
   | 'precipitation'
@@ -157,6 +164,43 @@ export async function getWeatherCumulative(
     search.set('base_temperature', String(params.base_temperature));
   }
   const response = await api.get<CumulativePoint[]>('/weather/cumulative', {
+    params: search,
+  });
+  return response.data;
+}
+
+export interface WeatherStatsRow {
+  time: string;
+  location_id: number;
+  source: string;
+  parameter: string;
+  min: number | null;
+  max: number | null;
+  mean: number | null;
+  sum: number | null;
+  count: number;
+}
+
+export interface WeatherStatsParams {
+  location_ids: number[];
+  parameters: string[];
+  date_from: string;
+  date_to: string;
+  source?: WeatherSource;
+  aggregation?: StatsAggregation;
+}
+
+export async function getWeatherStats(
+  params: WeatherStatsParams,
+): Promise<WeatherStatsRow[]> {
+  const search = new URLSearchParams();
+  appendList(search, 'location_ids', params.location_ids);
+  appendList(search, 'parameters', params.parameters);
+  search.set('date_from', params.date_from);
+  search.set('date_to', params.date_to);
+  if (params.source) search.set('source', params.source);
+  if (params.aggregation) search.set('aggregation', params.aggregation);
+  const response = await api.get<WeatherStatsRow[]>('/weather/stats', {
     params: search,
   });
   return response.data;

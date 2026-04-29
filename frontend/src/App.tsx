@@ -10,6 +10,7 @@ import { HomePage } from '@/pages/HomePage';
 import { LocationsPage } from '@/pages/LocationsPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { StubPage } from '@/pages/StubPage';
+import { TablesPage } from '@/pages/TablesPage';
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
           >
             <Route path="/" element={<HomePage />} />
             <Route path="/charts" element={<ChartsPage />} />
-            <Route path="/tables" element={<StubPage title="Таблицы" />} />
+            <Route path="/tables" element={<TablesPage />} />
             <Route
               path="/analytics"
               element={<StubPage title="Аналитика" />}
