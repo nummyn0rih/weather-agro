@@ -149,21 +149,21 @@
 - [x] `GET /api/locations/{id}/import-status`
 - [x] Идемпотентность: повторный запуск не дублирует данные (UPSERT)
 
-### 1.10 🔧 BE — Эндпоинт получения погодных данных
+### 1.10 🔧 BE — Эндпоинт получения погодных данных ✅
 
 **Описание:** Универсальный эндпоинт для запроса данных.
 **Зависит от:** → 1.9
 **DoD:**
 
-- [ ] `GET /api/weather/daily` с параметрами:
+- [x] `GET /api/weather/daily` с параметрами:
   - `location_ids: List[int]`
   - `parameters: List[str]` (temp_avg, precipitation, ...)
   - `date_from: date`, `date_to: date`
   - `source: str` (`open_meteo` / `nasa_power` / `average`)
   - `aggregation: str` (`day` / `week` / `month` / `season` / `year`)
-- [ ] Возвращает массив точек `{time, location_id, ...values}`
-- [ ] При `source=average` — среднее по доступным источникам
-- [ ] Тест на корректность агрегации
+- [x] Возвращает массив точек `{time, location_id, ...values}`
+- [x] При `source=average` — среднее по доступным источникам
+- [x] Тест на корректность агрегации
 
 ### 1.11 🔧 BE — Планировщик APScheduler
 
