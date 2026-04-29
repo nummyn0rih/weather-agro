@@ -274,10 +274,10 @@
 **Описание:** Агрегации для табличного представления.
 **DoD:**
 
-- [ ] `GET /api/weather/stats` — мин/макс/среднее/сумма по группировке
-- [ ] Поддержка фильтров (locations, parameters, date range, aggregation level)
-- [ ] Экспорт CSV: `GET /api/weather/export?format=csv`
-- [ ] Экспорт Excel: `format=xlsx` (openpyxl)
+- [x] `GET /api/weather/stats` — мин/макс/среднее/сумма по группировке
+- [x] Поддержка фильтров (locations, parameters, date range, aggregation level)
+- [x] Экспорт CSV: `GET /api/weather/export?format=csv`
+- [x] Экспорт Excel: `format=xlsx` (openpyxl)
 
 ### 3.3 🔧 BE — Climate normals
 

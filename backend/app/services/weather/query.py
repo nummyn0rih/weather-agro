@@ -29,6 +29,7 @@ from app.schemas.weather import (
     Aggregation,
     CumulativeParameter,
     HeatmapXAxis,
+    StatsAggregation,
     WeatherSource,
 )
 from app.services.analytics.calculators import calculate_gdd
@@ -371,6 +372,107 @@ def build_cumulative(
                 }
             )
     return out
+
+
+def build_stats(
+    rows: Iterable[dict[str, Any]],
+    parameters: Sequence[str],
+    aggregation: StatsAggregation,
+    out_source: str,
+) -> list[dict[str, Any]]:
+    """Group day-level rows into buckets and compute min/max/mean/sum/count per parameter.
+
+    With ``aggregation='total'`` the whole range collapses to one bucket per
+    (location, parameter); the bucket's ``time`` is the earliest day seen.
+    """
+
+    def bucket_key(d: date) -> date:
+        return date(1970, 1, 1) if aggregation == "total" else _bucket_start(
+            d, aggregation  # type: ignore[arg-type]
+        )
+
+    buckets: dict[
+        tuple[date, int, str], dict[str, Any]
+    ] = {}
+    for r in rows:
+        d: date = r["time"]
+        bk_date = bucket_key(d)
+        for p in parameters:
+            key = (bk_date, r["location_id"], p)
+            slot = buckets.get(key)
+            if slot is None:
+                slot = {"values": [], "min_time": d}
+                buckets[key] = slot
+            else:
+                if d < slot["min_time"]:
+                    slot["min_time"] = d
+            v = r.get(p)
+            if v is not None:
+                slot["values"].append(float(v))
+
+    out: list[dict[str, Any]] = []
+    for (bk_date, lid, p), slot in buckets.items():
+        vals: list[float] = slot["values"]
+        time_value = slot["min_time"] if aggregation == "total" else bk_date
+        if not vals:
+            row = {
+                "time": time_value,
+                "location_id": lid,
+                "source": out_source,
+                "parameter": p,
+                "min": None,
+                "max": None,
+                "mean": None,
+                "sum": None,
+                "count": 0,
+            }
+        else:
+            row = {
+                "time": time_value,
+                "location_id": lid,
+                "source": out_source,
+                "parameter": p,
+                "min": min(vals),
+                "max": max(vals),
+                "mean": sum(vals) / len(vals),
+                "sum": sum(vals),
+                "count": len(vals),
+            }
+        out.append(row)
+    return sorted(out, key=lambda r: (r["location_id"], r["parameter"], r["time"]))
+
+
+async def query_stats(
+    session: AsyncSession,
+    *,
+    location_ids: Sequence[int],
+    parameters: Sequence[str],
+    date_from: date,
+    date_to: date,
+    source: WeatherSource,
+    aggregation: StatsAggregation,
+) -> list[dict[str, Any]]:
+    """Aggregated min/max/mean/sum/count per parameter, grouped by aggregation level."""
+    if not location_ids:
+        raise ValueError("At least one location_id is required")
+    if date_from > date_to:
+        raise ValueError("date_from must be <= date_to")
+    parameters = _validate_parameters(parameters)
+
+    raw = await _fetch_rows(
+        session,
+        location_ids=location_ids,
+        parameters=parameters,
+        date_from=date_from,
+        date_to=date_to,
+        source=source,
+    )
+    if source == "average":
+        raw = collapse_to_average(raw, parameters)
+        out_source = "average"
+    else:
+        out_source = source
+    return build_stats(raw, parameters, aggregation, out_source)
 
 
 async def query_cumulative(

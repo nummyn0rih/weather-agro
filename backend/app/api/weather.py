@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -12,11 +12,15 @@ from app.schemas.weather import (
     Aggregation,
     CumulativeParameter,
     CumulativePoint,
+    ExportFormat,
     HeatmapCell,
     HeatmapXAxis,
+    StatsAggregation,
     WeatherDailyPoint,
     WeatherSource,
+    WeatherStatsRow,
 )
+from app.services.weather import export as export_service
 from app.services.weather import query as query_service
 
 router = APIRouter(prefix="/weather", tags=["weather"])
@@ -147,3 +151,103 @@ async def get_weather_cumulative(
         rows=len(rows),
     )
     return rows
+
+
+@router.get(
+    "/stats",
+    response_model=list[WeatherStatsRow],
+    summary="Aggregated min/max/mean/sum/count per (bucket, location, parameter)",
+)
+async def get_weather_stats(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    _user: Annotated[User, Depends(get_current_user)],
+    location_ids: Annotated[list[int], Query(min_length=1)],
+    parameters: Annotated[list[str], Query(min_length=1)],
+    date_from: Annotated[date, Query()],
+    date_to: Annotated[date, Query()],
+    source: Annotated[WeatherSource, Query()] = "open_meteo",
+    aggregation: Annotated[StatsAggregation, Query()] = "month",
+) -> list[dict]:
+    try:
+        rows = await query_service.query_stats(
+            session,
+            location_ids=location_ids,
+            parameters=parameters,
+            date_from=date_from,
+            date_to=date_to,
+            source=source,
+            aggregation=aggregation,
+        )
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    log.info(
+        "weather.stats.query",
+        location_ids=location_ids,
+        parameters=parameters,
+        source=source,
+        aggregation=aggregation,
+        rows=len(rows),
+    )
+    return rows
+
+
+@router.get(
+    "/export",
+    summary="Export daily weather rows as CSV or XLSX",
+)
+async def get_weather_export(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    _user: Annotated[User, Depends(get_current_user)],
+    location_ids: Annotated[list[int], Query(min_length=1)],
+    parameters: Annotated[list[str], Query(min_length=1)],
+    date_from: Annotated[date, Query()],
+    date_to: Annotated[date, Query()],
+    source: Annotated[WeatherSource, Query()] = "open_meteo",
+    aggregation: Annotated[Aggregation, Query()] = "day",
+    format: Annotated[ExportFormat, Query()] = "csv",
+) -> Response:
+    try:
+        rows = await query_service.query_daily(
+            session,
+            location_ids=location_ids,
+            parameters=parameters,
+            date_from=date_from,
+            date_to=date_to,
+            source=source,
+            aggregation=aggregation,
+        )
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    filename_base = f"weather_{date_from.isoformat()}_{date_to.isoformat()}"
+    log.info(
+        "weather.export",
+        location_ids=location_ids,
+        parameters=parameters,
+        source=source,
+        aggregation=aggregation,
+        format=format,
+        rows=len(rows),
+    )
+
+    if format == "csv":
+        body = export_service.rows_to_csv(rows, parameters).encode("utf-8")
+        return Response(
+            content=body,
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename_base}.csv"'
+            },
+        )
+
+    body = export_service.rows_to_xlsx(rows, parameters)
+    return Response(
+        content=body,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ),
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename_base}.xlsx"'
+        },
+    )

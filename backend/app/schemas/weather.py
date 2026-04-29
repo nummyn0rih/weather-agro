@@ -7,8 +7,10 @@ from pydantic import BaseModel, ConfigDict
 
 WeatherSource = Literal["open_meteo", "nasa_power", "openweathermap", "average"]
 Aggregation = Literal["day", "week", "month", "season", "year"]
+StatsAggregation = Literal["day", "week", "month", "season", "year", "total"]
 HeatmapXAxis = Literal["month", "week", "doy"]
 CumulativeParameter = Literal["precipitation", "et0", "sunshine_hours", "gdd"]
+ExportFormat = Literal["csv", "xlsx"]
 
 ALLOWED_PARAMETERS: frozenset[str] = frozenset(
     {
@@ -72,3 +74,17 @@ class CumulativePoint(BaseModel):
     parameter: str
     daily: float | None
     cumulative: float
+
+
+class WeatherStatsRow(BaseModel):
+    """One stats row per (bucket, location, parameter)."""
+
+    time: date
+    location_id: int
+    source: str
+    parameter: str
+    min: float | None
+    max: float | None
+    mean: float | None
+    sum: float | None
+    count: int

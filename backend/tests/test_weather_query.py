@@ -18,12 +18,14 @@ from app.api.deps import get_current_user
 from app.db.models import User
 from app.db.session import get_db
 from app.main import app
+from app.services.weather.export import rows_to_csv, rows_to_xlsx
 from app.services.weather.query import (
     _bucket_start,
     _heatmap_x,
     aggregate_buckets,
     build_cumulative,
     build_heatmap,
+    build_stats,
     collapse_to_average,
 )
 
@@ -379,6 +381,194 @@ def test_endpoint_cumulative_happy_path(monkeypatch, client) -> None:
     assert captured["parameter"] == "precipitation"
     body = response.json()
     assert body[0]["cumulative"] == 1.0
+
+
+def test_build_stats_min_max_mean_sum_count_by_month() -> None:
+    rows = [
+        {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+         "temp_avg": 10.0, "precipitation": 1.0},
+        {"time": date(2026, 4, 15), "location_id": 1, "source": "open_meteo",
+         "temp_avg": 14.0, "precipitation": 2.5},
+        {"time": date(2026, 5, 1), "location_id": 1, "source": "open_meteo",
+         "temp_avg": 18.0, "precipitation": None},
+    ]
+    out = build_stats(rows, ["temp_avg", "precipitation"], "month", "open_meteo")
+    by = {(r["time"], r["parameter"]): r for r in out}
+    apr_t = by[(date(2026, 4, 1), "temp_avg")]
+    assert apr_t["min"] == pytest.approx(10.0)
+    assert apr_t["max"] == pytest.approx(14.0)
+    assert apr_t["mean"] == pytest.approx(12.0)
+    assert apr_t["sum"] == pytest.approx(24.0)
+    assert apr_t["count"] == 2
+
+    apr_p = by[(date(2026, 4, 1), "precipitation")]
+    assert apr_p["sum"] == pytest.approx(3.5)
+    assert apr_p["count"] == 2
+
+    may_p = by[(date(2026, 5, 1), "precipitation")]
+    assert may_p["min"] is None
+    assert may_p["max"] is None
+    assert may_p["mean"] is None
+    assert may_p["sum"] is None
+    assert may_p["count"] == 0
+
+
+def test_build_stats_total_collapses_range_to_one_bucket() -> None:
+    rows = [
+        {"time": date(2026, 1, 5), "location_id": 1, "source": "open_meteo", "temp_avg": 0.0},
+        {"time": date(2026, 4, 15), "location_id": 1, "source": "open_meteo", "temp_avg": 10.0},
+        {"time": date(2026, 7, 1), "location_id": 1, "source": "open_meteo", "temp_avg": 20.0},
+    ]
+    out = build_stats(rows, ["temp_avg"], "total", "open_meteo")
+    assert len(out) == 1
+    r = out[0]
+    assert r["time"] == date(2026, 1, 5)
+    assert r["min"] == pytest.approx(0.0)
+    assert r["max"] == pytest.approx(20.0)
+    assert r["mean"] == pytest.approx(10.0)
+    assert r["count"] == 3
+
+
+def test_endpoint_stats_passes_filters(monkeypatch, client) -> None:
+    c, _ = client
+    captured: dict[str, object] = {}
+
+    async def fake_stats(_session, **kwargs):
+        captured.update(kwargs)
+        return [
+            {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+             "parameter": "temp_avg", "min": 5.0, "max": 15.0, "mean": 10.0,
+             "sum": 30.0, "count": 3}
+        ]
+
+    monkeypatch.setattr(weather_api.query_service, "query_stats", fake_stats)
+    response = c.get(
+        "/api/weather/stats",
+        params=[
+            ("location_ids", 1),
+            ("location_ids", 2),
+            ("parameters", "temp_avg"),
+            ("date_from", "2026-01-01"),
+            ("date_to", "2026-04-30"),
+            ("source", "average"),
+            ("aggregation", "month"),
+        ],
+    )
+    assert response.status_code == 200
+    assert captured["location_ids"] == [1, 2]
+    assert captured["parameters"] == ["temp_avg"]
+    assert captured["aggregation"] == "month"
+    body = response.json()
+    assert body[0]["mean"] == 10.0
+    assert body[0]["count"] == 3
+
+
+def test_rows_to_csv_has_header_and_iso_dates() -> None:
+    rows = [
+        {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+         "temp_avg": 10.0, "precipitation": 1.5},
+        {"time": date(2026, 4, 2), "location_id": 1, "source": "open_meteo",
+         "temp_avg": None, "precipitation": 0.0},
+    ]
+    out = rows_to_csv(rows, ["temp_avg", "precipitation"])
+    lines = out.strip().split("\n")
+    assert lines[0] == "time,location_id,source,temp_avg,precipitation"
+    assert lines[1] == "2026-04-01,1,open_meteo,10.0,1.5"
+    # None renders as empty cell.
+    assert lines[2] == "2026-04-02,1,open_meteo,,0.0"
+
+
+def test_rows_to_xlsx_returns_valid_workbook() -> None:
+    import io
+
+    from openpyxl import load_workbook
+
+    rows = [
+        {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+         "temp_avg": 11.0, "precipitation": 2.0},
+    ]
+    blob = rows_to_xlsx(rows, ["temp_avg", "precipitation"])
+    wb = load_workbook(io.BytesIO(blob), read_only=True)
+    ws = wb["weather"]
+    grid = [list(r) for r in ws.iter_rows(values_only=True)]
+    assert grid[0] == ["time", "location_id", "source", "temp_avg", "precipitation"]
+    assert grid[1] == ["2026-04-01", 1, "open_meteo", 11.0, 2.0]
+
+
+def test_endpoint_export_csv(monkeypatch, client) -> None:
+    c, _ = client
+
+    async def fake_query(_session, **_kwargs):
+        return [
+            {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+             "temp_avg": 10.0}
+        ]
+
+    monkeypatch.setattr(weather_api.query_service, "query_daily", fake_query)
+    response = c.get(
+        "/api/weather/export",
+        params=[
+            ("location_ids", 1),
+            ("parameters", "temp_avg"),
+            ("date_from", "2026-04-01"),
+            ("date_to", "2026-04-30"),
+            ("format", "csv"),
+        ],
+    )
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "attachment" in response.headers["content-disposition"]
+    body = response.text
+    assert body.startswith("time,location_id,source,temp_avg")
+    assert "2026-04-01,1,open_meteo,10.0" in body
+
+
+def test_endpoint_export_xlsx(monkeypatch, client) -> None:
+    c, _ = client
+
+    async def fake_query(_session, **_kwargs):
+        return [
+            {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+             "temp_avg": 10.0}
+        ]
+
+    monkeypatch.setattr(weather_api.query_service, "query_daily", fake_query)
+    response = c.get(
+        "/api/weather/export",
+        params=[
+            ("location_ids", 1),
+            ("parameters", "temp_avg"),
+            ("date_from", "2026-04-01"),
+            ("date_to", "2026-04-30"),
+            ("format", "xlsx"),
+        ],
+    )
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    # XLSX is a zip — magic bytes 'PK'.
+    assert response.content[:2] == b"PK"
+
+
+def test_endpoint_export_validates_format(monkeypatch, client) -> None:
+    c, _ = client
+
+    async def fake_query(_session, **_kwargs):
+        return []
+
+    monkeypatch.setattr(weather_api.query_service, "query_daily", fake_query)
+    response = c.get(
+        "/api/weather/export",
+        params=[
+            ("location_ids", 1),
+            ("parameters", "temp_avg"),
+            ("date_from", "2026-04-01"),
+            ("date_to", "2026-04-30"),
+            ("format", "pdf"),
+        ],
+    )
+    assert response.status_code == 422
 
 
 def test_endpoint_propagates_value_error_as_400(client, monkeypatch) -> None:
