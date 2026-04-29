@@ -217,17 +217,17 @@
 - [x] ProtectedRoute компонент
 - [x] Logout-кнопка в layout
 
-### 2.4 ⚙️ FE-F — Layout и роутинг
+### 2.4 ⚙️ FE-F — Layout и роутинг ✅
 
 **Описание:** Главный каркас приложения.
 **Зависит от:** → 2.3
 **DoD:**
 
-- [ ] `Layout.tsx` с sidebar (навигация) и header
-- [ ] Роуты: `/`, `/charts`, `/tables`, `/analytics`, `/events`, `/locations`, `/alerts`, `/reports`, `/settings`
-- [ ] Активный пункт меню подсвечивается
-- [ ] Mobile: sidebar становится drawer
-- [ ] Toggle светлой/тёмной темы (next-themes или собственная реализация)
+- [x] `Layout.tsx` с sidebar (навигация) и header
+- [x] Роуты: `/`, `/charts`, `/tables`, `/analytics`, `/events`, `/locations`, `/alerts`, `/reports`, `/settings`
+- [x] Активный пункт меню подсвечивается
+- [x] Mobile: sidebar становится drawer
+- [x] Toggle светлой/тёмной темы (next-themes или собственная реализация)
 
 ### 2.5 ⚙️ FE-F — Страница «Локации» (список + CRUD)
 

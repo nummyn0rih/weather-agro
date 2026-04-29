@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { queryClient } from '@/lib/query-client';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
+import { StubPage } from '@/pages/StubPage';
 
 function App() {
   return (
@@ -15,15 +16,31 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
-            path="/"
             element={
               <ProtectedRoute>
-                <AppLayout>
-                  <HomePage />
-                </AppLayout>
+                <AppLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route path="/" element={<HomePage />} />
+            <Route path="/charts" element={<StubPage title="Графики" />} />
+            <Route path="/tables" element={<StubPage title="Таблицы" />} />
+            <Route
+              path="/analytics"
+              element={<StubPage title="Аналитика" />}
+            />
+            <Route path="/events" element={<StubPage title="События" />} />
+            <Route
+              path="/locations"
+              element={<StubPage title="Локации" />}
+            />
+            <Route path="/alerts" element={<StubPage title="Алерты" />} />
+            <Route path="/reports" element={<StubPage title="Отчёты" />} />
+            <Route
+              path="/settings"
+              element={<StubPage title="Настройки" />}
+            />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
