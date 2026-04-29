@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { queryClient } from '@/lib/query-client';
 import { HomePage } from '@/pages/HomePage';
+import { LocationsPage } from '@/pages/LocationsPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { StubPage } from '@/pages/StubPage';
 
@@ -30,10 +31,7 @@ function App() {
               element={<StubPage title="Аналитика" />}
             />
             <Route path="/events" element={<StubPage title="События" />} />
-            <Route
-              path="/locations"
-              element={<StubPage title="Локации" />}
-            />
+            <Route path="/locations" element={<LocationsPage />} />
             <Route path="/alerts" element={<StubPage title="Алерты" />} />
             <Route path="/reports" element={<StubPage title="Отчёты" />} />
             <Route
