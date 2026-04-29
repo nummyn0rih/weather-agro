@@ -264,10 +264,10 @@
 **Зависит от:** → 1.10
 **DoD:**
 
-- [ ] Поддержка multi-location, multi-parameter
-- [ ] Опция `compare_years: List[int]` — возвращает данные с overlay по годам
-- [ ] Эндпоинт `GET /api/weather/heatmap` — данные для тепловой карты
-- [ ] Эндпоинт `GET /api/weather/cumulative` — накопительные суммы (осадки, GDD)
+- [x] Поддержка multi-location, multi-parameter
+- [x] Опция `compare_years: List[int]` — возвращает данные с overlay по годам
+- [x] Эндпоинт `GET /api/weather/heatmap` — данные для тепловой карты
+- [x] Эндпоинт `GET /api/weather/cumulative` — накопительные суммы (осадки, GDD)
 
 ### 3.2 🔧 BE — API для статистики и таблиц
 

@@ -20,7 +20,10 @@ from app.db.session import get_db
 from app.main import app
 from app.services.weather.query import (
     _bucket_start,
+    _heatmap_x,
     aggregate_buckets,
+    build_cumulative,
+    build_heatmap,
     collapse_to_average,
 )
 
@@ -196,6 +199,186 @@ def test_endpoint_validates_source_enum(client) -> None:
         ],
     )
     assert response.status_code == 422
+
+
+def test_heatmap_x_axes() -> None:
+    d = date(2026, 4, 29)
+    assert _heatmap_x(d, "month") == 4
+    assert _heatmap_x(d, "week") == d.isocalendar().week
+    assert _heatmap_x(d, "doy") == d.timetuple().tm_yday
+
+
+def test_build_heatmap_avg_and_sum() -> None:
+    rows = [
+        {"time": date(2025, 4, 1), "location_id": 1, "source": "open_meteo", "temp_avg": 10.0},
+        {"time": date(2025, 4, 15), "location_id": 1, "source": "open_meteo", "temp_avg": 14.0},
+        {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo", "temp_avg": 8.0},
+    ]
+    cells = build_heatmap(rows, "temp_avg", "month", "open_meteo")
+    by_year = {(c["year"], c["x"]): c for c in cells}
+    assert by_year[(2025, 4)]["value"] == pytest.approx(12.0)
+    assert by_year[(2026, 4)]["value"] == pytest.approx(8.0)
+
+    rows_p = [
+        {"time": date(2025, 4, 1), "location_id": 1, "source": "open_meteo", "precipitation": 1.0},
+        {"time": date(2025, 4, 5), "location_id": 1, "source": "open_meteo", "precipitation": 2.5},
+    ]
+    cells_p = build_heatmap(rows_p, "precipitation", "month", "open_meteo")
+    assert cells_p[0]["value"] == pytest.approx(3.5)
+
+
+def test_build_cumulative_precipitation_running_sum() -> None:
+    rows = [
+        {"time": date(2026, 4, 2), "location_id": 1, "source": "open_meteo", "precipitation": 2.0},
+        {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo", "precipitation": 1.0},
+        {"time": date(2026, 4, 3), "location_id": 1, "source": "open_meteo", "precipitation": None},
+        {"time": date(2026, 4, 4), "location_id": 1, "source": "open_meteo", "precipitation": 0.5},
+    ]
+    out = build_cumulative(
+        rows, parameter="precipitation", base_temperature=None, out_source="open_meteo"
+    )
+    assert [r["time"] for r in out] == [
+        date(2026, 4, 1), date(2026, 4, 2), date(2026, 4, 3), date(2026, 4, 4)
+    ]
+    assert [r["cumulative"] for r in out] == pytest.approx([1.0, 3.0, 3.0, 3.5])
+    assert out[2]["daily"] is None
+
+
+def test_build_cumulative_gdd_uses_base_temperature() -> None:
+    rows = [
+        {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+         "temp_min": 8.0, "temp_max": 16.0},  # mean=12, base=10 → 2
+        {"time": date(2026, 4, 2), "location_id": 1, "source": "open_meteo",
+         "temp_min": 5.0, "temp_max": 9.0},   # mean=7, base=10 → 0 (clamped)
+        {"time": date(2026, 4, 3), "location_id": 1, "source": "open_meteo",
+         "temp_min": None, "temp_max": 20.0}, # missing → None
+    ]
+    out = build_cumulative(
+        rows, parameter="gdd", base_temperature=10.0, out_source="open_meteo"
+    )
+    assert [r["daily"] for r in out] == [pytest.approx(2.0), pytest.approx(0.0), None]
+    assert [r["cumulative"] for r in out] == pytest.approx([2.0, 2.0, 2.0])
+
+
+def test_build_cumulative_gdd_requires_base_temperature() -> None:
+    with pytest.raises(ValueError, match="base_temperature"):
+        build_cumulative(
+            [{"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+              "temp_min": 5.0, "temp_max": 10.0}],
+            parameter="gdd",
+            base_temperature=None,
+            out_source="open_meteo",
+        )
+
+
+def test_build_cumulative_separates_locations() -> None:
+    rows = [
+        {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo", "precipitation": 1.0},
+        {"time": date(2026, 4, 1), "location_id": 2, "source": "open_meteo", "precipitation": 5.0},
+        {"time": date(2026, 4, 2), "location_id": 1, "source": "open_meteo", "precipitation": 1.0},
+    ]
+    out = build_cumulative(
+        rows, parameter="precipitation", base_temperature=None, out_source="open_meteo"
+    )
+    by_loc = {(r["location_id"], r["time"]): r["cumulative"] for r in out}
+    assert by_loc[(1, date(2026, 4, 1))] == pytest.approx(1.0)
+    assert by_loc[(1, date(2026, 4, 2))] == pytest.approx(2.0)
+    assert by_loc[(2, date(2026, 4, 1))] == pytest.approx(5.0)
+
+
+def test_endpoint_compare_years_overlay(client) -> None:
+    c, captured = client
+    response = c.get(
+        "/api/weather/daily",
+        params=[
+            ("location_ids", 1),
+            ("parameters", "temp_avg"),
+            ("date_from", "2026-04-01"),
+            ("date_to", "2026-04-30"),
+            ("compare_years", 2024),
+            ("compare_years", 2025),
+        ],
+    )
+    assert response.status_code == 200
+    assert captured["compare_years"] == [2024, 2025]
+
+
+def test_endpoint_heatmap_calls_service(monkeypatch, client) -> None:
+    c, _ = client
+
+    captured: dict[str, object] = {}
+
+    async def fake_heatmap(_session, **kwargs):
+        captured.update(kwargs)
+        return [
+            {"location_id": 1, "parameter": "temp_avg", "source": "open_meteo",
+             "year": 2026, "x": 4, "value": 12.0}
+        ]
+
+    monkeypatch.setattr(weather_api.query_service, "query_heatmap", fake_heatmap)
+    response = c.get(
+        "/api/weather/heatmap",
+        params={
+            "location_id": 1,
+            "parameter": "temp_avg",
+            "date_from": "2024-01-01",
+            "date_to": "2026-12-31",
+            "axis": "month",
+        },
+    )
+    assert response.status_code == 200
+    assert captured["location_id"] == 1
+    assert captured["parameter"] == "temp_avg"
+    assert captured["axis"] == "month"
+    assert response.json()[0]["value"] == 12.0
+
+
+def test_endpoint_cumulative_gdd_requires_base_temp(monkeypatch, client) -> None:
+    c, _ = client
+
+    async def boom(*_args, **_kwargs):
+        raise ValueError("base_temperature is required for parameter='gdd'")
+
+    monkeypatch.setattr(weather_api.query_service, "query_cumulative", boom)
+    response = c.get(
+        "/api/weather/cumulative",
+        params=[
+            ("location_ids", 1),
+            ("parameter", "gdd"),
+            ("date_from", "2026-04-01"),
+            ("date_to", "2026-05-01"),
+        ],
+    )
+    assert response.status_code == 400
+    assert "base_temperature" in response.json()["detail"]
+
+
+def test_endpoint_cumulative_happy_path(monkeypatch, client) -> None:
+    c, _ = client
+
+    captured: dict[str, object] = {}
+
+    async def fake_cum(_session, **kwargs):
+        captured.update(kwargs)
+        return [
+            {"time": date(2026, 4, 1), "location_id": 1, "source": "open_meteo",
+             "parameter": "precipitation", "daily": 1.0, "cumulative": 1.0}
+        ]
+
+    monkeypatch.setattr(weather_api.query_service, "query_cumulative", fake_cum)
+    response = c.get(
+        "/api/weather/cumulative",
+        params=[
+            ("location_ids", 1),
+            ("parameter", "precipitation"),
+            ("date_from", "2026-04-01"),
+            ("date_to", "2026-04-30"),
+        ],
+    )
+    assert response.status_code == 200
+    assert captured["parameter"] == "precipitation"
+    body = response.json()
+    assert body[0]["cumulative"] == 1.0
 
 
 def test_endpoint_propagates_value_error_as_400(client, monkeypatch) -> None:

@@ -7,6 +7,8 @@ from pydantic import BaseModel, ConfigDict
 
 WeatherSource = Literal["open_meteo", "nasa_power", "openweathermap", "average"]
 Aggregation = Literal["day", "week", "month", "season", "year"]
+HeatmapXAxis = Literal["month", "week", "doy"]
+CumulativeParameter = Literal["precipitation", "et0", "sunshine_hours", "gdd"]
 
 ALLOWED_PARAMETERS: frozenset[str] = frozenset(
     {
@@ -48,3 +50,25 @@ class WeatherDailyPoint(BaseModel):
     time: date
     location_id: int
     source: str
+
+
+class HeatmapCell(BaseModel):
+    """One cell in a heatmap matrix."""
+
+    location_id: int
+    parameter: str
+    source: str
+    year: int
+    x: int
+    value: float | None
+
+
+class CumulativePoint(BaseModel):
+    """One day on a cumulative-sum series."""
+
+    time: date
+    location_id: int
+    source: str
+    parameter: str
+    daily: float | None
+    cumulative: float
