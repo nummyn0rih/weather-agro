@@ -211,11 +211,11 @@
 **Зависит от:** → 2.2, 1.4
 **DoD:**
 
-- [ ] Страница `/login` с формой (логин, пароль)
-- [ ] Хранение токенов в localStorage
-- [ ] Zustand store `useAuthStore`
-- [ ] ProtectedRoute компонент
-- [ ] Logout-кнопка в layout
+- [x] Страница `/login` с формой (логин, пароль)
+- [x] Хранение токенов в localStorage
+- [x] Zustand store `useAuthStore`
+- [x] ProtectedRoute компонент
+- [x] Logout-кнопка в layout
 
 ### 2.4 ⚙️ FE-F — Layout и роутинг
 
