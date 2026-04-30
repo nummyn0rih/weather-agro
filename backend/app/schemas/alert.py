@@ -61,3 +61,27 @@ class AlertRuleResponse(AlertRuleBase):
 
     id: int
     created_at: datetime
+
+
+class AlertHistoryItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    rule_id: int | None
+    rule_name: str
+    location_id: int | None
+    location_name: str
+    parameter: str
+    condition: str
+    threshold: float
+    threshold_max: float | None
+    value: float
+    triggered_at: datetime
+    message: str
+
+
+class AlertHistoryResponse(BaseModel):
+    items: list[AlertHistoryItem]
+    total: int
+    limit: int
+    offset: int

@@ -1,10 +1,14 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text, func, text, true
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.db.models.location import Location
 
 
 class AlertRule(Base):
@@ -44,3 +48,5 @@ class AlertHistory(Base):
     condition_snapshot: Mapped[str] = mapped_column(String(10), nullable=False)
     threshold_snapshot: Mapped[float] = mapped_column(Float, nullable=False)
     threshold_max_snapshot: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    location: Mapped["Location | None"] = relationship("Location", lazy="raise")

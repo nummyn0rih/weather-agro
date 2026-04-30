@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.api.alert_history import router as alert_history_router
 from app.api.alerts import router as alerts_router
 from app.api.analytics import router as analytics_router
 from app.api.auth import limiter as auth_limiter
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
     app.include_router(weather_router, prefix="/api")
     app.include_router(analytics_router, prefix="/api")
     app.include_router(alerts_router, prefix="/api")
+    app.include_router(alert_history_router, prefix="/api")
 
     return app
 

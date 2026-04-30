@@ -420,31 +420,31 @@
 - [ ] `alembic upgrade head` после downgrade чисто
 - [ ] Smoke на непустой БД: создать `AlertHistory` pre-migration → upgrade → snapshot заполнен корректно
 
-### 4.4.1 🔧 BE — История срабатываний алертов (API)
+### 4.4.1 🔧 BE — История срабатываний алертов (API) ✅
 
 **Зависит от:** → 4.1, 4.2, 4.4.0
 
 **DoD:**
 
-- [ ] `GET /api/alerts/history` зарегистрирован, виден в Swagger
-- [ ] Фильтры query: `location_id`, `rule_id`, `date_from`, `date_to`
-- [ ] Пагинация: `limit` (default 50, max 200), `offset` (default 0)
-- [ ] Сортировка по `triggered_at DESC`
-- [ ] Response: `{ items: AlertHistoryItem[], total: int, limit: int, offset: int }`
-- [ ] `AlertHistoryItem` поля: `id, rule_id (nullable), rule_name (snapshot), location_id (nullable), location_name, parameter (snapshot), condition (snapshot), threshold (snapshot), threshold_max (snapshot, nullable), value, triggered_at, message`
-- [ ] `location_name` из связанной `Location.name`; если `location_id IS NULL` → `'(удалена)'`
-- [ ] `rule_name` берётся из `rule_name_snapshot` (всегда есть, даже если `rule_id IS NULL`)
-- [ ] Eager loading `Location` через `selectinload` (rule не подгружаем — все нужные данные в snapshot-полях)
-- [ ] Pydantic v2 схемы (`AlertHistoryItem`, `AlertHistoryResponse`)
-- [ ] Auth: `Depends(get_current_user)`
-- [ ] Тесты pytest:
-  - [ ] фильтр по `location_id`, `rule_id`
-  - [ ] фильтр по `date_from`/`date_to`
-  - [ ] пагинация (limit=2 offset=0 → 2; offset=2 → остальные)
-  - [ ] пустой результат
-  - [ ] запись с `rule_id=NULL` (rule удалено) — корректно отдаётся, `rule_name` = snapshot
-  - [ ] запись с `location_id=NULL` — `location_name='(удалена)'`
-- [ ] Создан `docs/DECISIONS.md` с ADR: `/api/...` без `/v1/` (MVP, миграция через nginx rewrite/новый prefix при необходимости)
+- [x] `GET /api/alerts/history` зарегистрирован, виден в Swagger
+- [x] Фильтры query: `location_id`, `rule_id`, `date_from`, `date_to`
+- [x] Пагинация: `limit` (default 50, max 200), `offset` (default 0)
+- [x] Сортировка по `triggered_at DESC`
+- [x] Response: `{ items: AlertHistoryItem[], total: int, limit: int, offset: int }`
+- [x] `AlertHistoryItem` поля: `id, rule_id (nullable), rule_name (snapshot), location_id (nullable), location_name, parameter (snapshot), condition (snapshot), threshold (snapshot), threshold_max (snapshot, nullable), value, triggered_at, message`
+- [x] `location_name` из связанной `Location.name`; если `location_id IS NULL` → `'(удалена)'`
+- [x] `rule_name` берётся из `rule_name_snapshot` (всегда есть, даже если `rule_id IS NULL`)
+- [x] Eager loading `Location` через `selectinload` (rule не подгружаем — все нужные данные в snapshot-полях)
+- [x] Pydantic v2 схемы (`AlertHistoryItem`, `AlertHistoryResponse`)
+- [x] Auth: `Depends(get_current_user)`
+- [x] Тесты pytest:
+  - [x] фильтр по `location_id`, `rule_id`
+  - [x] фильтр по `date_from`/`date_to`
+  - [x] пагинация (limit=2 offset=0 → 2; offset=2 → остальные)
+  - [x] пустой результат
+  - [x] запись с `rule_id=NULL` (rule удалено) — корректно отдаётся, `rule_name` = snapshot
+  - [x] запись с `location_id=NULL` — `location_name='(удалена)'`
+- [x] Создан `docs/DECISIONS.md` с ADR: `/api/...` без `/v1/` (MVP, миграция через nginx rewrite/новый prefix при необходимости)
 
 ### 4.5 ⚙️ FE-F — Страница «Алерты»
 
