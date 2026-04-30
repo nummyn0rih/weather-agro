@@ -388,9 +388,67 @@
 - [x] Формат: эмодзи + локация + параметр + значение + время
 - [x] Обработка ошибок отправки (retry 3 раза)
 
+### 4.4.0 🔧 BE — AlertHistory: snapshot-поля и nullable FK
+
+**Зависит от:** → 4.1, 4.2
+
+**Контекст:**
+Текущая `AlertHistory` хранит только `id, rule_id, location_id, triggered_at, value, message`. Для исторической корректности (правило могут изменить/удалить) нужен snapshot полей правила на момент срабатывания. Также FK на `alert_rules` и `locations` сейчас `ON DELETE CASCADE` — история теряется при удалении правила/локации; меняем на `SET NULL`.
+
+**Стратегия миграции — two-step в одном файле:**
+
+1. add new columns nullable=True
+2. backfill из `alert_rules` JOIN по `rule_id` (для записей с существующим правилом)
+3. backfill placeholder'ами для orphan-записей (`(deleted rule)`, `unknown`, `gt`, `0`)
+4. `ALTER COLUMN ... SET NOT NULL` на 4 поля (`threshold_max_snapshot` остаётся nullable)
+5. drop+recreate FK `alert_history_rule_id_fkey`, `alert_history_location_id_fkey` с `ON DELETE SET NULL`, сделать `rule_id` и `location_id` nullable
+
+**DoD:**
+
+- [ ] Миграция Alembic two-step в одном файле (add nullable → backfill → SET NOT NULL)
+- [ ] Колонки добавлены: `rule_name_snapshot String(200) NOT NULL`, `parameter_snapshot String(50) NOT NULL`, `condition_snapshot String(10) NOT NULL`, `threshold_snapshot Float NOT NULL`, `threshold_max_snapshot Float NULL`
+- [ ] FK `alert_history_rule_id_fkey` → `ON DELETE SET NULL`, `rule_id` nullable
+- [ ] FK `alert_history_location_id_fkey` → `ON DELETE SET NULL`, `location_id` nullable
+- [ ] SQLAlchemy модель `AlertHistory` синхронизирована (5 snapshot полей + nullable FK)
+- [ ] `app/services/alerts/engine.py:193-199` обновлён: создание `AlertHistory` заполняет 5 snapshot полей из `rule.*`
+- [ ] Существующие тесты alert engine проходят (адаптировать assertions)
+- [ ] Новый тест: после срабатывания все snapshot поля совпадают с rule на момент создания; изменение rule после срабатывания не меняет snapshot
+- [ ] Тест: удаление `AlertRule` оставляет связанную запись `AlertHistory` (не каскад), `rule_id` становится `NULL`, snapshot-поля сохранены
+- [ ] Тест: удаление `Location` оставляет связанную запись `AlertHistory`, `location_id` становится `NULL`
+- [ ] `alembic upgrade head` чисто на свежей БД
+- [ ] `alembic downgrade -1` чисто
+- [ ] `alembic upgrade head` после downgrade чисто
+- [ ] Smoke на непустой БД: создать `AlertHistory` pre-migration → upgrade → snapshot заполнен корректно
+
+### 4.4.1 🔧 BE — История срабатываний алертов (API)
+
+**Зависит от:** → 4.1, 4.2, 4.4.0
+
+**DoD:**
+
+- [ ] `GET /api/alerts/history` зарегистрирован, виден в Swagger
+- [ ] Фильтры query: `location_id`, `rule_id`, `date_from`, `date_to`
+- [ ] Пагинация: `limit` (default 50, max 200), `offset` (default 0)
+- [ ] Сортировка по `triggered_at DESC`
+- [ ] Response: `{ items: AlertHistoryItem[], total: int, limit: int, offset: int }`
+- [ ] `AlertHistoryItem` поля: `id, rule_id (nullable), rule_name (snapshot), location_id (nullable), location_name, parameter (snapshot), condition (snapshot), threshold (snapshot), threshold_max (snapshot, nullable), value, triggered_at, message`
+- [ ] `location_name` из связанной `Location.name`; если `location_id IS NULL` → `'(удалена)'`
+- [ ] `rule_name` берётся из `rule_name_snapshot` (всегда есть, даже если `rule_id IS NULL`)
+- [ ] Eager loading `Location` через `selectinload` (rule не подгружаем — все нужные данные в snapshot-полях)
+- [ ] Pydantic v2 схемы (`AlertHistoryItem`, `AlertHistoryResponse`)
+- [ ] Auth: `Depends(get_current_user)`
+- [ ] Тесты pytest:
+  - [ ] фильтр по `location_id`, `rule_id`
+  - [ ] фильтр по `date_from`/`date_to`
+  - [ ] пагинация (limit=2 offset=0 → 2; offset=2 → остальные)
+  - [ ] пустой результат
+  - [ ] запись с `rule_id=NULL` (rule удалено) — корректно отдаётся, `rule_name` = snapshot
+  - [ ] запись с `location_id=NULL` — `location_name='(удалена)'`
+- [ ] Создан `docs/DECISIONS.md` с ADR: `/api/...` без `/v1/` (MVP, миграция через nginx rewrite/новый prefix при необходимости)
+
 ### 4.5 ⚙️ FE-F — Страница «Алерты»
 
-**Зависит от:** → 4.1, 2.4
+**Зависит от:** → 4.1, 4.4.1, 2.4
 **DoD:**
 
 - [ ] Список правил с toggle включения
@@ -684,9 +742,12 @@
 3.2 → 3.7
 3.3, 3.4, 3.5 → 3.8
 
-4.1 → 4.2, 4.5
+4.1 → 4.2, 4.4.0, 4.4.1, 4.5
 4.3 → 4.4
 4.2, 4.3 → 4.4
+4.2 → 4.4.0
+4.4.0 → 4.4.1
+4.4.1 → 4.5
 
 5.1 → 5.2, 5.4
 5.1, 3.2, 3.4 → 5.3 → 5.5
