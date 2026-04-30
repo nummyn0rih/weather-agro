@@ -373,11 +373,11 @@
 **Описание:** Базовый бот с командами.
 **DoD:**
 
-- [ ] `app/telegram_bot/main.py`
-- [ ] Запускается как отдельный процесс (Docker service)
-- [ ] Команды: `/start`, `/help`, `/locations`, `/weather <id>`, `/forecast <id>`, `/alerts`, `/alerts_history`, `/stats <id> <period>`
-- [ ] Привязка chat_id через одноразовый код (генерируется в UI)
-- [ ] Доступ только для привязанного chat_id
+- [x] `app/telegram_bot/main.py`
+- [x] Запускается как отдельный процесс (Docker service)
+- [x] Команды: `/start`, `/help`, `/locations`, `/weather <id>`, `/forecast <id>`, `/alerts`, `/alerts_history`, `/stats <id> <period>`
+- [x] Привязка chat_id через одноразовый код (генерируется в UI)
+- [x] Доступ только для привязанного chat_id
 
 ### 4.4 🔧 BE — Интеграция алертов с Telegram
 

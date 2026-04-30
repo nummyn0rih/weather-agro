@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -19,3 +21,14 @@ class AccessToken(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class TelegramBindCodeResponse(BaseModel):
+    code: str = Field(..., examples=["12345678"])
+    expires_at: datetime
+    bot_username: str | None = None
+
+
+class TelegramBindStatus(BaseModel):
+    chat_id: int | None
+    bound: bool

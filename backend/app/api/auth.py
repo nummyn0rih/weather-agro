@@ -6,15 +6,26 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user
+from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
     verify_password,
 )
+from app.db.models import User
 from app.db.session import get_db
-from app.schemas.auth import AccessToken, LoginRequest, RefreshRequest, TokenPair
+from app.schemas.auth import (
+    AccessToken,
+    LoginRequest,
+    RefreshRequest,
+    TelegramBindCodeResponse,
+    TelegramBindStatus,
+    TokenPair,
+)
 from app.services import auth as auth_service
+from app.services import telegram_bind
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = structlog.get_logger()
@@ -72,4 +83,57 @@ async def refresh(body: RefreshRequest) -> AccessToken:
     "the frontend must drop the access and refresh tokens from local storage.",
 )
 async def logout() -> None:
+    return None
+
+
+@router.post(
+    "/telegram/bind-code",
+    response_model=TelegramBindCodeResponse,
+    summary="Issue one-time Telegram bind code for the current user",
+    description="Generates a short-lived numeric code. The user sends "
+    "`/start <code>` to the bot to bind their chat_id.",
+)
+async def issue_telegram_bind_code(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> TelegramBindCodeResponse:
+    settings = get_settings()
+    code, expires_at = await telegram_bind.issue_bind_code(
+        session, user, ttl_seconds=settings.TELEGRAM_BIND_CODE_TTL
+    )
+    log.info("telegram.bind_code_issued", user_id=user.id)
+    return TelegramBindCodeResponse(
+        code=code,
+        expires_at=expires_at,
+        bot_username=None,
+    )
+
+
+@router.get(
+    "/telegram/status",
+    response_model=TelegramBindStatus,
+    summary="Telegram bind status for the current user",
+)
+async def telegram_status(
+    user: Annotated[User, Depends(get_current_user)],
+) -> TelegramBindStatus:
+    return TelegramBindStatus(
+        chat_id=user.telegram_chat_id, bound=user.telegram_chat_id is not None
+    )
+
+
+@router.delete(
+    "/telegram/bind",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Unbind Telegram chat from the current user",
+)
+async def unbind_telegram(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> None:
+    user.telegram_chat_id = None
+    user.telegram_bind_code = None
+    user.telegram_bind_code_expires_at = None
+    await session.commit()
+    log.info("telegram.unbound", user_id=user.id)
     return None

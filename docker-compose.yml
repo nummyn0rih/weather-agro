@@ -61,7 +61,7 @@ services:
       - weather-net
 
   telegram_bot:
-    # Same image as backend; bot entrypoint lands in task 4.x.
+    # Reuses backend image — different entrypoint (long-poll Telegram bot).
     build: ./backend
     container_name: weather-telegram-bot
     restart: unless-stopped
@@ -71,7 +71,7 @@ services:
         condition: service_healthy
     networks:
       - weather-net
-    command: ["tail", "-f", "/dev/null"]
+    command: ["python", "-m", "app.telegram_bot.main"]
 
 volumes:
   postgres_data:
