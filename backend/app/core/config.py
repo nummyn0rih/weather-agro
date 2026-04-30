@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_BIND_CODE_TTL: int = 300
 
+    # ── Alerts ────────────────────────────────────────────
+    ALERTS_DEDUP_HOURS: int = 6
+
     # ── Encryption (Fernet) ───────────────────────────────
     ENCRYPTION_KEY: str = ""
 

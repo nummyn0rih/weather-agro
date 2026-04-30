@@ -283,6 +283,7 @@ def test_create_scheduler_registers_default_jobs() -> None:
         jobs_mod.DAILY_INGEST_JOB_ID,
         jobs_mod.FORECAST_REFRESH_JOB_ID,
         jobs_mod.CLIMATE_NORMALS_JOB_ID,
+        jobs_mod.EVALUATE_ALERTS_JOB_ID,
     }
     # Daily ingest must trigger at 03:00 Europe/Moscow.
     daily = sched.get_job(jobs_mod.DAILY_INGEST_JOB_ID)

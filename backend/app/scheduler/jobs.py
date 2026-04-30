@@ -25,8 +25,10 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.core.config import get_settings
 from app.db.models import Location, SchedulerLog
 from app.db.session import async_session_factory
+from app.services.alerts import engine as alerts_engine
 from app.services.analytics import climate_normals as normals_service
 from app.services.weather import ingest, nasa_power, open_meteo
 
@@ -35,6 +37,7 @@ logger = structlog.get_logger(__name__)
 DAILY_INGEST_JOB_ID = "daily_ingest"
 FORECAST_REFRESH_JOB_ID = "forecast_refresh"
 CLIMATE_NORMALS_JOB_ID = "climate_normals_recompute"
+EVALUATE_ALERTS_JOB_ID = "evaluate_alerts"
 
 
 async def _list_locations(session: AsyncSession) -> list[Location]:
@@ -248,5 +251,25 @@ async def climate_normals_job(
     await _run_with_log(
         CLIMATE_NORMALS_JOB_ID,
         _recompute_climate_normals,
+        session_factory=session_factory,
+    )
+
+
+async def _evaluate_alerts(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> int:
+    """Evaluate every enabled alert rule. Returns triggers recorded."""
+    dedup_hours = get_settings().ALERTS_DEDUP_HOURS
+    async with session_factory() as session:
+        return await alerts_engine.evaluate_all(session, dedup_hours=dedup_hours)
+
+
+async def evaluate_alerts_job(
+    session_factory: async_sessionmaker[AsyncSession] | None = None,
+) -> None:
+    """Entry point for the hourly alert evaluation job."""
+    await _run_with_log(
+        EVALUATE_ALERTS_JOB_ID,
+        _evaluate_alerts,
         session_factory=session_factory,
     )
