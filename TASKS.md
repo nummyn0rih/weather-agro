@@ -352,9 +352,9 @@
 
 **DoD:**
 
-- [ ] `GET/POST/PUT/DELETE /api/alerts/rules`
-- [ ] Pydantic-схемы AlertRule (parameter, condition, threshold, location_ids, enabled)
-- [ ] Тесты
+- [x] `GET/POST/PUT/DELETE /api/alerts/rules`
+- [x] Pydantic-схемы AlertRule (parameter, condition, threshold, location_ids, enabled)
+- [x] Тесты
 
 ### 4.2 🔧 BE — Движок алертов
 

@@ -15,6 +15,7 @@ class AlertRule(Base):
     parameter: Mapped[str] = mapped_column(String(50), nullable=False)
     condition: Mapped[str] = mapped_column(String(10), nullable=False)
     threshold: Mapped[float] = mapped_column(Float, nullable=False)
+    threshold_max: Mapped[float | None] = mapped_column(Float, nullable=True)
     location_ids: Mapped[list[int]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
