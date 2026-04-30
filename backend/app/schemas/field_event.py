@@ -6,6 +6,35 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 EventType = Literal["planting", "harvest", "note"]
 
 
+class EventWeather(BaseModel):
+    """Weather snapshot attached to a field event (cross-source average for the event date)."""
+
+    model_config = ConfigDict(extra="allow")
+
+    temp_min: float | None = None
+    temp_max: float | None = None
+    temp_avg: float | None = None
+    soil_temp_0: float | None = None
+    soil_temp_7: float | None = None
+    soil_temp_28: float | None = None
+    soil_temp_100: float | None = None
+    dew_point: float | None = None
+    frost_hours: float | None = None
+    humidity_min: float | None = None
+    humidity_max: float | None = None
+    humidity_avg: float | None = None
+    soil_moisture_0_7: float | None = None
+    soil_moisture_7_28: float | None = None
+    soil_moisture_28_100: float | None = None
+    precipitation: float | None = None
+    et0: float | None = None
+    solar_radiation: float | None = None
+    sunshine_hours: float | None = None
+    wind_speed_avg: float | None = None
+    wind_speed_max: float | None = None
+    vpd: float | None = None
+
+
 class FieldEventBase(BaseModel):
     location_id: int
     event_type: EventType
@@ -51,3 +80,4 @@ class FieldEventResponse(FieldEventBase):
     id: int
     photos: list[str]
     created_at: datetime
+    weather: EventWeather | None = None

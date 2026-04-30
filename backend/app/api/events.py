@@ -24,6 +24,7 @@ from app.db.models import User
 from app.db.session import get_db
 from app.schemas.field_event import (
     EventType,
+    EventWeather,
     FieldEventCreate,
     FieldEventResponse,
     FieldEventUpdate,
@@ -107,7 +108,7 @@ async def create_event(
 @router.get(
     "/{event_id}",
     response_model=FieldEventResponse,
-    summary="Get field event by ID",
+    summary="Get field event by ID (with weather snapshot for event_date)",
 )
 async def get_event(
     event_id: int,
@@ -117,7 +118,20 @@ async def get_event(
     obj = await event_service.get_event(session, event_id)
     if not obj:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Event not found")
-    return obj
+    weather = await event_service.get_event_weather(
+        session, obj.location_id, obj.event_date
+    )
+    log.info(
+        "event.read",
+        id=event_id,
+        location_id=obj.location_id,
+        event_date=obj.event_date.isoformat(),
+        weather_attached=weather is not None,
+    )
+    response = FieldEventResponse.model_validate(obj)
+    if weather is not None:
+        response.weather = EventWeather.model_validate(weather)
+    return response
 
 
 @router.put(

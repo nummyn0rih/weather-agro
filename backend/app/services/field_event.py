@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Sequence
+from typing import Any, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +7,10 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from app.db.models import FieldEvent
 from app.schemas.field_event import FieldEventCreate, FieldEventUpdate
+from app.schemas.weather import ALLOWED_PARAMETERS
+from app.services.weather.query import query_daily
+
+_WEATHER_META_KEYS = {"time", "location_id", "source"}
 
 
 async def list_events(
@@ -90,3 +94,25 @@ async def remove_photo(
     await session.commit()
     await session.refresh(event)
     return event
+
+
+async def get_event_weather(
+    session: AsyncSession, location_id: int, event_date: date
+) -> dict[str, Any] | None:
+    """Cross-source averaged weather for the event's location and date.
+
+    Returns ``None`` if no source has data for that day.
+    """
+    rows = await query_daily(
+        session,
+        location_ids=[location_id],
+        parameters=sorted(ALLOWED_PARAMETERS),
+        date_from=event_date,
+        date_to=event_date,
+        source="average",
+        aggregation="day",
+    )
+    if not rows:
+        return None
+    row = rows[0]
+    return {k: v for k, v in row.items() if k not in _WEATHER_META_KEYS}

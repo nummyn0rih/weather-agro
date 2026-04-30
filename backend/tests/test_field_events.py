@@ -102,6 +102,9 @@ def client(monkeypatch, tmp_path):
         event.photos = [p for p in event.photos if p != url]
         return event
 
+    async def fake_get_weather(_session, _location_id, _event_date):
+        return None
+
     monkeypatch.setattr(event_service, "list_events", fake_list)
     monkeypatch.setattr(event_service, "get_event", fake_get)
     monkeypatch.setattr(event_service, "create_event", fake_create)
@@ -109,6 +112,7 @@ def client(monkeypatch, tmp_path):
     monkeypatch.setattr(event_service, "delete_event", fake_delete)
     monkeypatch.setattr(event_service, "add_photos", fake_add_photos)
     monkeypatch.setattr(event_service, "remove_photo", fake_remove_photo)
+    monkeypatch.setattr(event_service, "get_event_weather", fake_get_weather)
 
     async def fake_user() -> User:
         return User(id=1, username="admin", password_hash="x")
@@ -153,11 +157,52 @@ def test_list_filter_by_type_and_date(client) -> None:
 def test_get_event(client) -> None:
     response = client.get("/api/events/1")
     assert response.status_code == 200
-    assert response.json()["id"] == 1
+    body = response.json()
+    assert body["id"] == 1
+    # No weather seeded by default fixture → weather is null
+    assert body["weather"] is None
 
 
 def test_get_event_404(client) -> None:
     assert client.get("/api/events/999").status_code == 404
+
+
+def test_get_event_attaches_weather(client, monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    async def fake_weather(_session, location_id, event_date):
+        captured["location_id"] = location_id
+        captured["event_date"] = event_date
+        return {
+            "temp_avg": 12.5,
+            "precipitation": 3.0,
+            "humidity_avg": 80.0,
+            "vpd": 0.4,
+        }
+
+    monkeypatch.setattr(event_service, "get_event_weather", fake_weather)
+
+    response = client.get("/api/events/1")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert captured == {"location_id": 1, "event_date": date(2026, 4, 1)}
+    assert body["weather"] is not None
+    assert body["weather"]["temp_avg"] == 12.5
+    assert body["weather"]["precipitation"] == 3.0
+    assert body["weather"]["humidity_avg"] == 80.0
+    assert body["weather"]["vpd"] == 0.4
+
+
+def test_get_event_weather_null_when_no_data(client, monkeypatch) -> None:
+    async def fake_weather(_session, _location_id, _event_date):
+        return None
+
+    monkeypatch.setattr(event_service, "get_event_weather", fake_weather)
+
+    response = client.get("/api/events/1")
+    assert response.status_code == 200
+    assert response.json()["weather"] is None
 
 
 def test_create_note_event(client) -> None:
