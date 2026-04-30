@@ -21,14 +21,16 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
+import httpx
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import get_settings
-from app.db.models import Location, SchedulerLog
+from app.db.models import AlertHistory, AlertRule, Location, SchedulerLog
 from app.db.session import async_session_factory
 from app.services.alerts import engine as alerts_engine
+from app.services.alerts.notifier import notify_alert
 from app.services.analytics import climate_normals as normals_service
 from app.services.weather import ingest, nasa_power, open_meteo
 
@@ -258,10 +260,34 @@ async def climate_normals_job(
 async def _evaluate_alerts(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> int:
-    """Evaluate every enabled alert rule. Returns triggers recorded."""
-    dedup_hours = get_settings().ALERTS_DEDUP_HOURS
-    async with session_factory() as session:
-        return await alerts_engine.evaluate_all(session, dedup_hours=dedup_hours)
+    """Evaluate every enabled alert rule. Returns triggers recorded.
+
+    When ``TELEGRAM_BOT_TOKEN`` is configured, fired alerts are pushed to
+    every Telegram chat bound to a user. The notifier opens a dedicated
+    DB session per dispatch to avoid sharing connections with the
+    evaluator's transaction.
+    """
+    settings = get_settings()
+    dedup_hours = settings.ALERTS_DEDUP_HOURS
+    token = settings.TELEGRAM_BOT_TOKEN
+
+    if not token:
+        async with session_factory() as session:
+            return await alerts_engine.evaluate_all(
+                session, dedup_hours=dedup_hours
+            )
+
+    async with httpx.AsyncClient() as client:
+        async def notifier(rule: AlertRule, history: AlertHistory) -> None:
+            async with session_factory() as notify_session:
+                await notify_alert(
+                    notify_session, client, token, rule, history
+                )
+
+        async with session_factory() as session:
+            return await alerts_engine.evaluate_all(
+                session, dedup_hours=dedup_hours, notifier=notifier
+            )
 
 
 async def evaluate_alerts_job(

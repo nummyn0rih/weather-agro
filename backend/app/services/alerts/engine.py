@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 import statistics
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import UTC, date, datetime, timedelta
 
 import structlog
@@ -21,6 +21,8 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import AlertHistory, AlertRule, Location, WeatherDaily
+
+NotifierFn = Callable[[AlertRule, AlertHistory], Awaitable[None]]
 
 logger = structlog.get_logger(__name__)
 
@@ -146,8 +148,14 @@ async def evaluate_rule(
     target_day: date,
     now: datetime | None = None,
     dedup_hours: int = DEFAULT_DEDUP_HOURS,
+    notifier: NotifierFn | None = None,
 ) -> list[AlertHistory]:
-    """Evaluate one rule. Returns the AlertHistory rows it created."""
+    """Evaluate one rule. Returns the AlertHistory rows it created.
+
+    If ``notifier`` is provided, it is invoked once per created row after
+    the rows are committed. Notifier failures are logged but do not affect
+    the returned history.
+    """
     if not rule.enabled:
         return []
 
@@ -196,6 +204,16 @@ async def evaluate_rule(
         await session.commit()
         for h in created:
             await session.refresh(h)
+        if notifier is not None:
+            for h in created:
+                try:
+                    await notifier(rule, h)
+                except Exception:
+                    logger.exception(
+                        "alerts.notify_failed",
+                        rule_id=rule.id,
+                        history_id=h.id,
+                    )
     return created
 
 
@@ -205,6 +223,7 @@ async def evaluate_all(
     target_day: date | None = None,
     now: datetime | None = None,
     dedup_hours: int = DEFAULT_DEDUP_HOURS,
+    notifier: NotifierFn | None = None,
 ) -> int:
     """Evaluate every enabled rule. Returns total triggers recorded."""
     moment = now or datetime.now(UTC)
@@ -223,6 +242,7 @@ async def evaluate_all(
                 target_day=day,
                 now=moment,
                 dedup_hours=dedup_hours,
+                notifier=notifier,
             )
             total += len(created)
         except Exception:
