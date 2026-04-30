@@ -196,6 +196,11 @@ async def evaluate_rule(
             triggered_at=moment,
             value=value,
             message=_format_message(rule, value, loc_id),
+            rule_name_snapshot=rule.name,
+            parameter_snapshot=rule.parameter,
+            condition_snapshot=rule.condition,
+            threshold_snapshot=rule.threshold,
+            threshold_max_snapshot=rule.threshold_max,
         )
         session.add(history)
         created.append(history)

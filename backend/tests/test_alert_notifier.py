@@ -67,15 +67,31 @@ def _rule(
     )
 
 
-def _history(value: float = 35.5, location_id: int = 1) -> AlertHistory:
-    return AlertHistory(
-        id=10,
-        rule_id=1,
-        location_id=location_id,
-        triggered_at=datetime(2026, 4, 29, 6, 30, tzinfo=UTC),
-        value=value,
-        message="ignored — notifier formats its own",
-    )
+def _history(
+    value: float = 35.5,
+    location_id: int | None = 1,
+    *,
+    rule: AlertRule | None = None,
+    **overrides: object,
+) -> AlertHistory:
+    snapshot_defaults = {
+        "rule_name_snapshot": rule.name if rule else "Heat",
+        "parameter_snapshot": rule.parameter if rule else "temperature_max",
+        "condition_snapshot": rule.condition if rule else "gt",
+        "threshold_snapshot": rule.threshold if rule else 30.0,
+        "threshold_max_snapshot": rule.threshold_max if rule else None,
+    }
+    base = {
+        "id": 10,
+        "rule_id": rule.id if rule else 1,
+        "location_id": location_id,
+        "triggered_at": datetime(2026, 4, 29, 6, 30, tzinfo=UTC),
+        "value": value,
+        "message": "ignored — notifier formats its own",
+        **snapshot_defaults,
+    }
+    base.update(overrides)
+    return AlertHistory(**base)
 
 
 # ── Formatting ───────────────────────────────────────────────────────

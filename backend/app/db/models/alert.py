@@ -30,12 +30,17 @@ class AlertHistory(Base):
     __tablename__ = "alert_history"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    rule_id: Mapped[int] = mapped_column(
-        ForeignKey("alert_rules.id", ondelete="CASCADE"), nullable=False
+    rule_id: Mapped[int | None] = mapped_column(
+        ForeignKey("alert_rules.id", ondelete="SET NULL"), nullable=True
     )
-    location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id", ondelete="CASCADE"), nullable=False
+    location_id: Mapped[int | None] = mapped_column(
+        ForeignKey("locations.id", ondelete="SET NULL"), nullable=True
     )
     triggered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     value: Mapped[float] = mapped_column(Float, nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
+    rule_name_snapshot: Mapped[str] = mapped_column(String(200), nullable=False)
+    parameter_snapshot: Mapped[str] = mapped_column(String(50), nullable=False)
+    condition_snapshot: Mapped[str] = mapped_column(String(10), nullable=False)
+    threshold_snapshot: Mapped[float] = mapped_column(Float, nullable=False)
+    threshold_max_snapshot: Mapped[float | None] = mapped_column(Float, nullable=True)
