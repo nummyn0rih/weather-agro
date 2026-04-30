@@ -388,7 +388,7 @@
 - [x] Формат: эмодзи + локация + параметр + значение + время
 - [x] Обработка ошибок отправки (retry 3 раза)
 
-### 4.4.0 🔧 BE — AlertHistory: snapshot-поля и nullable FK
+### 4.4.0 🔧 BE — AlertHistory: snapshot-поля и nullable FK ✅
 
 **Зависит от:** → 4.1, 4.2
 
@@ -405,20 +405,20 @@
 
 **DoD:**
 
-- [ ] Миграция Alembic two-step в одном файле (add nullable → backfill → SET NOT NULL)
-- [ ] Колонки добавлены: `rule_name_snapshot String(200) NOT NULL`, `parameter_snapshot String(50) NOT NULL`, `condition_snapshot String(10) NOT NULL`, `threshold_snapshot Float NOT NULL`, `threshold_max_snapshot Float NULL`
-- [ ] FK `alert_history_rule_id_fkey` → `ON DELETE SET NULL`, `rule_id` nullable
-- [ ] FK `alert_history_location_id_fkey` → `ON DELETE SET NULL`, `location_id` nullable
-- [ ] SQLAlchemy модель `AlertHistory` синхронизирована (5 snapshot полей + nullable FK)
-- [ ] `app/services/alerts/engine.py:193-199` обновлён: создание `AlertHistory` заполняет 5 snapshot полей из `rule.*`
-- [ ] Существующие тесты alert engine проходят (адаптировать assertions)
-- [ ] Новый тест: после срабатывания все snapshot поля совпадают с rule на момент создания; изменение rule после срабатывания не меняет snapshot
-- [ ] Тест: удаление `AlertRule` оставляет связанную запись `AlertHistory` (не каскад), `rule_id` становится `NULL`, snapshot-поля сохранены
-- [ ] Тест: удаление `Location` оставляет связанную запись `AlertHistory`, `location_id` становится `NULL`
-- [ ] `alembic upgrade head` чисто на свежей БД
-- [ ] `alembic downgrade -1` чисто
-- [ ] `alembic upgrade head` после downgrade чисто
-- [ ] Smoke на непустой БД: создать `AlertHistory` pre-migration → upgrade → snapshot заполнен корректно
+- [x] Миграция Alembic two-step в одном файле (add nullable → backfill → SET NOT NULL)
+- [x] Колонки добавлены: `rule_name_snapshot String(200) NOT NULL`, `parameter_snapshot String(50) NOT NULL`, `condition_snapshot String(10) NOT NULL`, `threshold_snapshot Float NOT NULL`, `threshold_max_snapshot Float NULL`
+- [x] FK `alert_history_rule_id_fkey` → `ON DELETE SET NULL`, `rule_id` nullable
+- [x] FK `alert_history_location_id_fkey` → `ON DELETE SET NULL`, `location_id` nullable
+- [x] SQLAlchemy модель `AlertHistory` синхронизирована (5 snapshot полей + nullable FK)
+- [x] `app/services/alerts/engine.py:193-199` обновлён: создание `AlertHistory` заполняет 5 snapshot полей из `rule.*`
+- [x] Существующие тесты alert engine проходят (адаптировать assertions)
+- [x] Новый тест: после срабатывания все snapshot поля совпадают с rule на момент создания; изменение rule после срабатывания не меняет snapshot
+- [x] Тест: удаление `AlertRule` оставляет связанную запись `AlertHistory` (не каскад), `rule_id` становится `NULL`, snapshot-поля сохранены
+- [x] Тест: удаление `Location` оставляет связанную запись `AlertHistory`, `location_id` становится `NULL`
+- [x] `alembic upgrade head` чисто на свежей БД
+- [x] `alembic downgrade -1` чисто
+- [x] `alembic upgrade head` после downgrade чисто
+- [x] Smoke на непустой БД: создать `AlertHistory` pre-migration → upgrade → snapshot заполнен корректно
 
 ### 4.4.1 🔧 BE — История срабатываний алертов (API) ✅
 
@@ -451,11 +451,11 @@
 **Зависит от:** → 4.1, 4.4.1, 2.4
 **DoD:**
 
-- [ ] Список правил с toggle включения
-- [ ] Форма создания/редактирования
-- [ ] Шаблоны: «Жара», «Заморозки», «Ливень»
-- [ ] Вкладка «История срабатываний» с фильтрами
-- [ ] Кнопка «Привязать Telegram» → модалка с кодом
+- [x] Список правил с toggle включения
+- [x] Форма создания/редактирования
+- [x] Шаблоны: «Жара», «Заморозки», «Ливень»
+- [x] Вкладка «История срабатываний» с фильтрами
+- [x] Кнопка «Привязать Telegram» → модалка с кодом
 
 ---
 
