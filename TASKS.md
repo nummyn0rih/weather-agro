@@ -461,15 +461,15 @@
 
 ## Этап 5: Журнал и отчёты
 
-### 5.1 🔧 BE — CRUD событий журнала
+### 5.1 🔧 BE — CRUD событий журнала ✅
 
 **DoD:**
 
-- [ ] `GET/POST/PUT/DELETE /api/events`
-- [ ] Загрузка фото: `POST /api/events/{id}/photos` (multipart, до 5 файлов)
-- [ ] Сохранение в `/uploads/events/{event_id}/`
-- [ ] Удаление фото
-- [ ] Фильтры: location_id, event_type, crop_id, date range
+- [x] `GET/POST/PUT/DELETE /api/events`
+- [x] Загрузка фото: `POST /api/events/{id}/photos` (multipart, до 5 файлов)
+- [x] Сохранение в `/uploads/events/{event_id}/`
+- [x] Удаление фото
+- [x] Фильтры: location_id, event_type, crop_id, date range
 
 ### 5.2 🔧 BE — Привязка событий к погоде
 
