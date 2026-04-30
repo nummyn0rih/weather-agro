@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сезонный отчёт {{ season_year }} — {{ location.name }}</title>
+<style>
+  @page { size: A4; margin: 18mm 14mm; }
+  body { font-family: "DejaVu Sans", Helvetica, Arial, sans-serif; color: #222; font-size: 10pt; }
+  h1 { font-size: 22pt; margin: 0 0 6pt; }
+  h2 { font-size: 14pt; margin: 16pt 0 6pt; border-bottom: 1pt solid #ccc; padding-bottom: 2pt; }
+  h3 { font-size: 11pt; margin: 8pt 0 4pt; }
+  .cover { page-break-after: always; }
+  .cover h1 { font-size: 28pt; }
+  .cover .meta { color: #555; font-size: 12pt; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0; }
+  th, td { padding: 4pt 6pt; text-align: left; border-bottom: 1pt solid #eee; vertical-align: top; }
+  th { background: #f4f4f4; font-weight: 600; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .chart { margin: 8pt 0; }
+  .chart img { width: 100%; height: auto; }
+  .empty { color: #888; font-style: italic; }
+  .badge { display: inline-block; padding: 1pt 6pt; border-radius: 3pt; font-size: 9pt; }
+  .badge.moderate { background: #fff4cc; color: #876800; }
+  .badge.extreme { background: #ffd6d6; color: #a01010; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <h1>Сезонный отчёт</h1>
+  <p class="meta">
+    <strong>Локация:</strong> {{ location.name }}<br>
+    {% if location.region %}<strong>Регион:</strong> {{ location.region }}<br>{% endif %}
+    <strong>Координаты:</strong> {{ "%.4f"|format(location.latitude) }}, {{ "%.4f"|format(location.longitude) }}<br>
+    <strong>Сезон:</strong> {{ season_year }} ({{ period_from }} — {{ period_to }})<br>
+    <strong>Сформирован:</strong> {{ generated_at }}
+  </p>
+</section>
+
+<h2>Сводка погоды</h2>
+{% if summary %}
+<table>
+  <tr><th>Параметр</th><th>Среднее</th><th>Минимум</th><th>Максимум</th><th>Сумма</th></tr>
+  {% for row in summary %}
+  <tr>
+    <td>{{ row.label }}</td>
+    <td class="num">{{ row.mean if row.mean is not none else "—" }}</td>
+    <td class="num">{{ row.min if row.min is not none else "—" }}</td>
+    <td class="num">{{ row.max if row.max is not none else "—" }}</td>
+    <td class="num">{{ row.sum if row.sum is not none else "—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="empty">Нет данных за период.</p>
+{% endif %}
+
+<h2>Графики</h2>
+{% for chart in charts %}
+<h3>{{ chart.title }}</h3>
+<div class="chart"><img src="data:image/png;base64,{{ chart.png_b64 }}" alt="{{ chart.title }}"></div>
+{% else %}
+<p class="empty">Нет данных для построения графиков.</p>
+{% endfor %}
+
+<h2>Аномалии и экстремумы</h2>
+{% if anomalies %}
+<table>
+  <tr><th>Дата</th><th>Параметр</th><th>Значение</th><th>Норма</th><th>σ</th><th>Уровень</th></tr>
+  {% for a in anomalies %}
+  <tr>
+    <td>{{ a.time }}</td>
+    <td>{{ a.parameter }}</td>
+    <td class="num">{{ a.value if a.value is not none else "—" }}</td>
+    <td class="num">{{ a.normal_mean if a.normal_mean is not none else "—" }}</td>
+    <td class="num">{{ "%.1f"|format(a.sigma) if a.sigma is not none else "—" }}</td>
+    <td><span class="badge {{ a.level }}">{{ a.level }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="empty">Аномалий не зафиксировано.</p>
+{% endif %}
+
+<h2>События</h2>
+{% if events %}
+<table>
+  <tr><th>Дата</th><th>Тип</th><th>Культура</th><th>Площадь, га</th><th>Урожай, кг</th><th>Описание</th></tr>
+  {% for e in events %}
+  <tr>
+    <td>{{ e.event_date }}</td>
+    <td>{{ e.event_type }}</td>
+    <td>{{ e.crop_name or "—" }}</td>
+    <td class="num">{{ e.area_hectares if e.area_hectares is not none else "—" }}</td>
+    <td class="num">{{ e.yield_kg if e.yield_kg is not none else "—" }}</td>
+    <td>{{ e.description or "" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="empty">События не зафиксированы.</p>
+{% endif %}
+
+<h2>Урожайность</h2>
+{% if yields %}
+<table>
+  <tr><th>Культура</th><th>Урожай, кг</th><th>Площадь, га</th><th>Урожайность, кг/га</th></tr>
+  {% for y in yields %}
+  <tr>
+    <td>{{ y.crop_name }}</td>
+    <td class="num">{{ y.yield_kg }}</td>
+    <td class="num">{{ y.area_hectares if y.area_hectares is not none else "—" }}</td>
+    <td class="num">{{ "%.1f"|format(y.yield_per_ha) if y.yield_per_ha is not none else "—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="empty">Нет данных по урожайности.</p>
+{% endif %}
+
+</body>
+</html>

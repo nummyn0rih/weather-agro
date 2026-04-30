@@ -10,6 +10,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         build-essential \
+        libpango-1.0-0 \
+        libpangoft2-1.0-0 \
+        libharfbuzz0b \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libffi-dev \
+        shared-mime-info \
+        fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 # Deps first for layer caching.

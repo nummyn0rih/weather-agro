@@ -487,12 +487,12 @@
 **Зависит от:** → 5.1, 3.2, 3.4
 **DoD:**
 
-- [ ] `app/services/reports/pdf_generator.py` (WeasyPrint)
-- [ ] HTML-шаблон отчёта (Jinja2): обложка, сводка погоды, графики (PNG), аномалии, события, урожайность
-- [ ] Графики рендерятся в PNG через matplotlib (на бэкенде)
-- [ ] `POST /api/reports/generate` с параметрами `location_id`, `season_year` → возвращает file_id
-- [ ] `GET /api/reports/{file_id}/download` → отдаёт PDF
-- [ ] Хранение сгенерированных отчётов в `/uploads/reports/`
+- [x] `app/services/reports/pdf_generator.py` (WeasyPrint)
+- [x] HTML-шаблон отчёта (Jinja2): обложка, сводка погоды, графики (PNG), аномалии, события, урожайность
+- [x] Графики рендерятся в PNG через matplotlib (на бэкенде)
+- [x] `POST /api/reports/generate` с параметрами `location_id`, `season_year` → возвращает file_id
+- [x] `GET /api/reports/{file_id}/download` → отдаёт PDF
+- [x] Хранение сгенерированных отчётов в `/uploads/reports/`
 
 ### 5.4 ⚙️ FE-F — Страница «Журнал событий»
 

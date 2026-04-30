@@ -21,3 +21,11 @@ DoD-тесты для 4.4.0 живут в отдельном `tests/test_alert_h
 **Schema portability:** production-модели используют Postgres-specific server_defaults (`alert_rules.location_ids` с литералом `'[]'::jsonb`). `Base.metadata.create_all` против SQLite падает с `unrecognized token: ":"`. Test-fixtures обязаны cherry-pick'ать FK-closed подмножества и временно стрипать несовместимые `server_default` (см. fixture в `test_alert_history_fk.py`). Также `JSONB`-колонки требуют compile-hook на SQLite (рендер в `JSON`). Long-term fix: testcontainer (real Postgres) или portable defaults в моделях.
 
 Контекст: обнаружено при 4.4.0, отложено как low-priority test infra debt.
+
+## PDF generation blocks event loop
+
+File: backend/app/services/reports/runner.py (BackgroundTasks pattern)
+Impact: 1-10s blocking per report; OK for single-tenant MVP
+Fix trigger: multi-user mode OR reports routinely >30s
+Fix options: run_in_executor (quick) | Celery/RQ (proper)
+Added during 5.3.

@@ -15,6 +15,7 @@ from app.api.auth import router as auth_router
 from app.api.events import router as events_router
 from app.api.health import router as health_router
 from app.api.locations import router as locations_router
+from app.api.reports import router as reports_router
 from app.api.weather import router as weather_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(alerts_router, prefix="/api")
     app.include_router(alert_history_router, prefix="/api")
     app.include_router(events_router, prefix="/api")
+    app.include_router(reports_router, prefix="/api")
 
     return app
 

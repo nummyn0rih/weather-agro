@@ -27,6 +27,9 @@ dependencies = [
     "openpyxl>=3.1,<4.0",
     "numpy>=2.0,<3.0",
     "python-telegram-bot>=21.6,<22.0",
+    "jinja2>=3.1,<4.0",
+    "matplotlib>=3.9,<4.0",
+    "weasyprint>=62.0,<63.0",
 ]
 
 [project.optional-dependencies]
