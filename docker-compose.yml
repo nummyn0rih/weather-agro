@@ -35,6 +35,12 @@ services:
         condition: service_healthy
     networks:
       - weather-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health', timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   frontend:
     build:
@@ -43,6 +49,9 @@ services:
     container_name: weather-frontend
     restart: unless-stopped
     env_file: .env
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - weather-net
 
@@ -68,6 +77,8 @@ services:
     env_file: .env
     depends_on:
       db:
+        condition: service_healthy
+      backend:
         condition: service_healthy
     networks:
       - weather-net
