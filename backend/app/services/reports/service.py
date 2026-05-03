@@ -38,6 +38,37 @@ async def get_report(session: AsyncSession, report_id: int) -> Report | None:
     return result.scalar_one_or_none()
 
 
+async def delete_report(session: AsyncSession, report_id: int) -> bool:
+    """Delete report row and its PDF file from disk.
+
+    Returns ``True`` if the row existed (and was deleted), ``False`` otherwise.
+    Missing file on disk is not an error — the DB row is removed regardless and
+    a warning is logged.
+    """
+    obj = await get_report(session, report_id)
+    if obj is None:
+        return False
+
+    file_path = obj.file_path
+    await session.delete(obj)
+    await session.commit()
+
+    if file_path:
+        path = Path(file_path)
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            log.warning("report.delete.file_missing", report_id=report_id, path=str(path))
+        except OSError as exc:
+            log.error(
+                "report.delete.file_unlink_failed",
+                report_id=report_id,
+                path=str(path),
+                error=str(exc),
+            )
+    return True
+
+
 async def run_generation(
     session_factory: async_sessionmaker[AsyncSession],
     *,

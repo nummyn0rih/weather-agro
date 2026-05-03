@@ -88,9 +88,21 @@ def client(monkeypatch, tmp_path):
         obj.file_size_bytes = path.stat().st_size
         obj.finished_at = _NOW
 
+    async def fake_delete(_session, report_id):
+        obj = reports.pop(report_id, None)
+        if obj is None:
+            return False
+        if obj.file_path:
+            try:
+                Path(obj.file_path).unlink()
+            except FileNotFoundError:
+                pass
+        return True
+
     monkeypatch.setattr(report_service, "create_pending_report", fake_create)
     monkeypatch.setattr(report_service, "get_report", fake_get)
     monkeypatch.setattr(report_service, "run_generation", fake_run_generation)
+    monkeypatch.setattr(report_service, "delete_report", fake_delete)
 
     async def fake_user() -> User:
         return User(id=1, username="admin", password_hash="x")
@@ -153,8 +165,42 @@ def test_endpoints_require_auth() -> None:
         r2 = c.get("/api/reports")
         r3 = c.get("/api/reports/1")
         r4 = c.get("/api/reports/1/download")
-    for r in (r1, r2, r3, r4):
+        r5 = c.delete("/api/reports/1")
+    for r in (r1, r2, r3, r4, r5):
         assert r.status_code == 401, r.text
+
+
+def test_delete_happy_path(client) -> None:
+    create = client.post(
+        "/api/reports/generate",
+        json={"location_id": 1, "season_year": 2026},
+    )
+    file_id = create.json()["id"]
+    pdf_path = report_service.report_file_path(get_settings().UPLOAD_DIR, file_id)
+    assert pdf_path.exists()
+
+    response = client.delete(f"/api/reports/{file_id}")
+    assert response.status_code == 204, response.text
+    assert response.content == b""
+    assert not pdf_path.exists()
+    assert client.get(f"/api/reports/{file_id}").status_code == 404
+
+
+def test_delete_not_found(client) -> None:
+    assert client.delete("/api/reports/9999").status_code == 404
+
+
+def test_delete_idempotent_on_missing_file(client) -> None:
+    create = client.post(
+        "/api/reports/generate",
+        json={"location_id": 1, "season_year": 2024},
+    )
+    file_id = create.json()["id"]
+    report_service.report_file_path(get_settings().UPLOAD_DIR, file_id).unlink()
+
+    response = client.delete(f"/api/reports/{file_id}")
+    assert response.status_code == 204, response.text
+    assert client.get(f"/api/reports/{file_id}").status_code == 404
 
 
 def test_download_pending_returns_409(client, monkeypatch) -> None:

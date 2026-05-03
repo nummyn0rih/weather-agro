@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -114,3 +114,20 @@ async def download_report(
         media_type="application/pdf",
         filename=f"report_{file_id}.pdf",
     )
+
+
+@router.delete(
+    "/{file_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a report (DB row + PDF file on disk)",
+)
+async def delete_report(
+    file_id: int,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    _user: Annotated[User, Depends(get_current_user)],
+) -> Response:
+    deleted = await report_service.delete_report(session, file_id)
+    if not deleted:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Report not found")
+    log.info("report.deleted", report_id=file_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
