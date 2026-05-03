@@ -8,6 +8,7 @@ import { queryClient } from '@/lib/query-client';
 import { AlertsPage } from '@/pages/AlertsPage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import { ChartsPage } from '@/pages/ChartsPage';
+import { EventsPage } from '@/pages/EventsPage';
 import { HomePage } from '@/pages/HomePage';
 import { LocationsPage } from '@/pages/LocationsPage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -31,7 +32,7 @@ function App() {
             <Route path="/charts" element={<ChartsPage />} />
             <Route path="/tables" element={<TablesPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/events" element={<StubPage title="События" />} />
+            <Route path="/events" element={<EventsPage />} />
             <Route path="/locations" element={<LocationsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/reports" element={<StubPage title="Отчёты" />} />
