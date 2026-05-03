@@ -368,6 +368,20 @@
 - [x] Дедупликация: не слать повторно одинаковый алерт в пределах N часов
 - [x] Тесты с разными условиями
 
+### 4.2.1 🔧 BE — Fix TZ: dedup сравнение в alerts engine
+
+**Описание:** В `app/services/alerts/engine.py:185` сравнение `last >= cutoff` падает с `TypeError: can't compare offset-naive and offset-aware datetimes` при прогоне на SQLite (aiosqlite драйвер возвращает naive datetime даже из колонки `TIMESTAMPTZ`). Postgres-prod не падает, но дефект скрытый — любой драйвер, теряющий tzinfo при чтении, сломает дедуп.
+
+**Зависит от:** → 4.2
+
+**DoD:**
+
+- [ ] `_last_triggered_at` в `engine.py` коэрсит naive → aware UTC перед возвратом
+- [ ] Grep по `backend/app/services/alerts/` — все `datetime.now()` используют `tz=UTC`
+- [ ] `tests/test_alert_engine.py::test_dedup_blocks_repeat_within_window` зелёный
+- [ ] `tests/test_alert_engine.py::test_dedup_allows_repeat_after_window` зелёный
+- [ ] Регрессии нет: полный прогон pytest без новых fail
+
 ### 4.3 🔧 BE — Telegram-бот (каркас)
 
 **Описание:** Базовый бот с командами.
@@ -508,6 +522,23 @@
 - [x] `GET /api/reports/{file_id}/download` → отдаёт PDF
 - [x] Хранение сгенерированных отчётов в `/uploads/reports/`
 
+### 5.3.1 🔧 BE — Удаление отчёта ✅
+
+**Описание:** DELETE-эндпоинт для удаления сгенерированного PDF-отчёта (запись + файл).
+**Зависит от:** → 5.3
+**DoD:**
+
+- [x] `DELETE /api/reports/{file_id}` — удаляет запись из БД и файл с диска (если существует)
+- [x] 404 если запись не существует
+- [x] Идемпотентность по файлу: отсутствие файла на диске не даёт 500 (логировать warning, БД-запись всё равно удалить)
+- [x] Auth: `Depends(get_current_user)` (как остальные `/api/reports/*`)
+- [x] Pydantic: response пустой / `204 No Content`
+- [x] Тесты pytest:
+  - [x] happy path: создать report со status=done + dummy-файл → DELETE → 204, файла нет, в БД нет
+  - [x] 404 на несуществующий id
+  - [x] 401 без токена
+  - [x] файл отсутствует на диске → DELETE всё равно успешен, запись из БД удалена
+
 ### 5.4 ⚙️ FE-F — Страница «Журнал событий» ✅
 
 **Зависит от:** → 5.1, 5.2, 2.4, 5.0.5
@@ -524,7 +555,7 @@
 
 ### 5.5 ⚙️ FE-F — Страница «Отчёты»
 
-**Зависит от:** → 5.3, 2.4
+**Зависит от:** → 5.3, 5.3.1, 2.4
 **DoD:**
 
 - [ ] Форма: выбор локации, сезона
@@ -560,18 +591,108 @@
 - [ ] CLI-скрипт восстановления `scripts/restore.py`
 - [ ] Логирование в БД (таблица `backup_logs`)
 
-### 6.3 🔧 BE — Эндпоинт настроек
+### 6.3.0 🔧 BE — `is_admin` на User + dependency `require_admin`
+
+**Описание:** Forward-compat поле роли + зависимость FastAPI для admin-only эндпоинтов. Блокер для 6.3 и 6.3.2 (PRD §11 — единственный пользователь, но эндпоинты настроек/справочников должны иметь явный admin-gate).
+
+**Зависит от:** → 1.4
 
 **DoD:**
 
-- [ ] `GET /api/settings` — текущие настройки
-- [ ] `PUT /api/settings` — обновление
-- [ ] Поля: источники данных (приоритеты), API-ключи (маскированные при выдаче), Telegram-настройки, бэкап-настройки
-- [ ] Шифрование чувствительных полей (Fernet) перед сохранением в БД
+- [ ] Поле `User.is_admin: bool = False` (server_default `false`)
+- [ ] Alembic-миграция: добавить колонку, backfill `true` для пользователя с `username == ADMIN_USERNAME` (env)
+- [ ] Сидер `app/scripts/seed.py`: при создании admin-пользователя выставлять `is_admin=True`
+- [ ] `app/api/deps.py`: `require_admin = Depends(get_current_user)` + проверка `if not user.is_admin: raise HTTPException(403)`
+- [ ] Тесты: admin-пользователь проходит, обычный — 403
+- [ ] `alembic downgrade -1` чисто
+
+### 6.3 🔧 BE — Эндпоинты настроек (4 группы)
+
+**Описание:** API настроек по 4 группам (sources / api-keys / telegram / backup) с шифрованием секретов и маскировкой. Дизайн зафиксирован в [`docs/DECISIONS.md` → ADR-002](docs/DECISIONS.md).
+
+**Зависит от:** → 6.3.0
+
+**DoD:**
+
+- [ ] Эндпоинты (все требуют `Depends(require_admin)`):
+  - [ ] `GET /api/settings/sources`, `PUT /api/settings/sources`
+  - [ ] `GET /api/settings/api-keys`, `PUT /api/settings/api-keys`
+  - [ ] `GET /api/settings/telegram`, `PUT /api/settings/telegram`
+  - [ ] `GET /api/settings/backup`, `PUT /api/settings/backup`
+- [ ] Pydantic v2 схемы для каждой группы (отдельные input/output типы)
+- [ ] Хранение: одна строка на группу в существующей таблице `settings(key, value JSONB)`, ключи `sources | api_keys | telegram | backup`
+- [ ] Шифрование секретов: Fernet, ключ выводится из `SECRET_KEY` через HKDF (`app/core/security.py`)
+- [ ] Resolver `app/services/settings/resolver.py`: `get_secret(name)` возвращает DB → env → None (DB перекрывает env когда задано)
+- [ ] Все клиенты (`open_meteo`, `openweathermap`, `nasa_power`, `yandex_disk`, `telegram_bot`) читают секреты через resolver, не напрямую из `os.environ`
+- [ ] Маскировка в GET: секреты возвращаются как `"***" + value[-4:]`; пустые → `null`
+- [ ] PUT-семантика sentinel (см. ADR-002 Q3):
+  - поле отсутствует / `null` → не менять
+  - значение начинается с `"***"` → не менять (round-trip GET-payload идемпотентен)
+  - пустая строка `""` → удалить из БД (fallback на env)
+  - любая другая строка → зашифровать и сохранить
+- [ ] Audit log на каждый PUT: `structlog.info("settings.updated", group=..., user_id=..., changed_keys=[...])`. **Значения секретов НЕ логируются** — только имена изменённых полей
+- [ ] Тесты pytest:
+  - [ ] happy path для каждой группы (GET → PUT → GET)
+  - [ ] маскировка last4
+  - [ ] sentinel: PUT с маской → значение не меняется
+  - [ ] PUT с `""` → секрет удалён, GET даёт env-значение
+  - [ ] не-admin (`is_admin=False`) → 403
+  - [ ] неавторизованный → 401
+  - [ ] resolver: DB перекрывает env; при отсутствии DB-значения возвращает env
+
+### 6.3.1 🔧 BE — Смена пароля
+
+**Описание:** Эндпоинт смены пароля авторизованным пользователем.
+
+**Зависит от:** → 1.4
+
+**DoD:**
+
+- [ ] `POST /api/auth/change-password`
+- [ ] Body: `{old_password: str, new_password: str}` (Pydantic v2)
+- [ ] Валидация `new_password`: min 8 символов, не равен `old_password`
+- [ ] Проверка `verify_password(old_password, user.password_hash)` → 400 если не совпадает
+- [ ] Хеш нового через `bcrypt` (как в логине)
+- [ ] Auth: `Depends(get_current_user)`
+- [ ] Инвалидация refresh-токенов: **N/A для MVP** — JWT stateless, refresh-токены в БД не хранятся (`backend/app/core/security.py` использует `jose.jwt`). Документировать как known limitation: после смены пароля старый refresh остаётся валидным до истечения (7 дней). Полное решение — `User.password_changed_at` + проверка `iat >= password_changed_at` в `get_current_user` — отложено до отдельной задачи (создать issue, не в рамках 6.3.1)
+- [ ] Audit log: `structlog.info("auth.password_changed", user_id=...)` (без значений)
+- [ ] Тесты pytest:
+  - [ ] happy path: верный old → 204, новый пароль работает в `/login`
+  - [ ] неверный old_password → 400
+  - [ ] new_password слабый (<8) → 422
+  - [ ] new == old → 400
+  - [ ] 401 без токена
+
+### 6.3.2 🔧 BE — Crops CRUD (admin)
+
+**Описание:** Расширить `app/api/crops.py` до полноценного CRUD справочника культур.
+
+**Зависит от:** → 5.0.5, 6.3.0
+
+**DoD:**
+
+- [ ] `POST /api/crops` (admin) — создать культуру
+- [ ] `PUT /api/crops/{id}` (admin) — обновить
+- [ ] `DELETE /api/crops/{id}` (admin) — см. ниже стратегию удаления
+- [ ] Pydantic v2 схемы: `CropCreate`, `CropUpdate` (поля: `name`, `base_temperature`, `optimal_temp_min`, `optimal_temp_max`)
+- [ ] Уникальность `name` (DB constraint + 409 при дубликате)
+- [ ] **Стратегия DELETE: `409 Conflict` при наличии связанных `field_events` или `location_crops`.** Обоснование:
+  - soft delete усложняет фильтры FE и сидер (что делать при reseed уже soft-deleted культуры?)
+  - cascade рискует: одно случайное `DELETE` сносит исторические события урожая → потеря данных журнала
+  - 409 безопасен и явен; admin сначала чистит/мигрирует связанные записи, потом удаляет
+  - response 409: `{detail: "Crop is referenced by N field_events / M location_crops", references: {field_events: N, location_crops: M}}`
+- [ ] Все мутирующие эндпоинты — `Depends(require_admin)`
+- [ ] Тесты pytest:
+  - [ ] POST happy + 409 на дубликат имени
+  - [ ] PUT happy + 404 на несуществующий + 409 на дубликат при переименовании
+  - [ ] DELETE happy (нет связанных)
+  - [ ] DELETE → 409 при наличии `field_events` (создать через фикстуру)
+  - [ ] DELETE → 409 при наличии `location_crops`
+  - [ ] не-admin → 403, неавторизованный → 401
 
 ### 6.4 ⚙️ FE-F — Страница «Настройки»
 
-**Зависит от:** → 6.3
+**Зависит от:** → 6.2, 6.3, 6.3.1, 6.3.2
 **DoD:**
 
 - [ ] Вкладки: «Источники данных», «API-ключи», «Telegram», «Бэкапы», «Культуры», «Профиль»
@@ -757,6 +878,7 @@
 3.3, 3.4, 3.5 → 3.8
 
 4.1 → 4.2, 4.4.0, 4.4.1, 4.5
+4.2 → 4.2.1
 4.3 → 4.4
 4.2, 4.3 → 4.4
 4.2 → 4.4.0
@@ -764,9 +886,12 @@
 4.4.1 → 4.5
 
 5.1 → 5.2, 5.4
-5.1, 3.2, 3.4 → 5.3 → 5.5
+5.1, 3.2, 3.4 → 5.3 → 5.3.1 → 5.5
 
-6.3 → 6.4
+1.4 → 6.3.0 → 6.3, 6.3.2
+1.4 → 6.3.1
+5.0.5 → 6.3.2
+6.2, 6.3, 6.3.1, 6.3.2 → 6.4
 6.5 → 6.6 → 6.7
 
 7.1 → 7.2..7.9
