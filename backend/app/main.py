@@ -12,6 +12,7 @@ from app.api.alerts import router as alerts_router
 from app.api.analytics import router as analytics_router
 from app.api.auth import limiter as auth_limiter
 from app.api.auth import router as auth_router
+from app.api.crops import router as crops_router
 from app.api.events import router as events_router
 from app.api.health import router as health_router
 from app.api.locations import router as locations_router
@@ -73,6 +74,7 @@ def create_app() -> FastAPI:
     app.include_router(alerts_router, prefix="/api")
     app.include_router(alert_history_router, prefix="/api")
     app.include_router(events_router, prefix="/api")
+    app.include_router(crops_router, prefix="/api")
     app.include_router(reports_router, prefix="/api")
 
     return app
