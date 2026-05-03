@@ -124,7 +124,13 @@ async def _last_triggered_at(
         .order_by(desc(AlertHistory.triggered_at))
         .limit(1)
     )
-    return (await session.execute(stmt)).scalar_one_or_none()
+    value = (await session.execute(stmt)).scalar_one_or_none()
+    # Some drivers (notably aiosqlite) strip tzinfo on read even when the column
+    # is declared TIMESTAMPTZ. Postgres preserves it; this coercion is a no-op
+    # there but keeps comparisons safe everywhere.
+    if value is not None and value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value
 
 
 def _format_message(rule: AlertRule, value: float, location_id: int) -> str:
