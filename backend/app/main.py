@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
+import os
+
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -76,6 +79,13 @@ def create_app() -> FastAPI:
     app.include_router(events_router, prefix="/api")
     app.include_router(crops_router, prefix="/api")
     app.include_router(reports_router, prefix="/api")
+
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    app.mount(
+        "/uploads",
+        StaticFiles(directory=settings.UPLOAD_DIR),
+        name="uploads",
+    )
 
     return app
 

@@ -22,6 +22,21 @@ DoD-тесты для 4.4.0 живут в отдельном `tests/test_alert_h
 
 Контекст: обнаружено при 4.4.0, отложено как low-priority test infra debt.
 
+## /uploads/ публичный доступ (5.4)
+
+File: `backend/app/main.py` — `app.mount("/uploads", StaticFiles(...))` без auth.
+Trigger: переход на multi-user (PRD § post-MVP).
+Fix options:
+- Signed URLs (короткоживущие токены в query string), бэкенд выдаёт ссылки в `FieldEventResponse.photos`.
+- ИЛИ session-cookie auth для статики (фронт+бэк на одном домене).
+
+Обоснование текущего MVP-решения:
+- Single-tenant (PRD §15) — единственный пользователь.
+- `<img src>` не умеет Bearer без costly workaround (fetch+blob URL → удвоенный трафик/память).
+- Имена файлов = `uuid4().hex` → unguessable.
+
+Добавлено при выполнении 5.4.
+
 ## PDF generation blocks event loop
 
 File: backend/app/services/reports/runner.py (BackgroundTasks pattern)
