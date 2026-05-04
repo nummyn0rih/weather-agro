@@ -570,12 +570,12 @@
 
 **DoD:**
 
-- [ ] `app/services/weather/openweathermap.py`
-- [ ] Метод `fetch_current(lat, lon)` — текущая погода
-- [ ] Метод `fetch_forecast(lat, lon)` — прогноз 5 дней
-- [ ] Учёт лимита бесплатного тарифа (60 req/min)
-- [ ] Активация только если в `.env` указан `OPENWEATHERMAP_API_KEY`
-- [ ] Тест с замоканным httpx
+- [x] `app/services/weather/openweathermap.py`
+- [x] Метод `fetch_current(lat, lon)` — текущая погода
+- [x] Метод `fetch_forecast(lat, lon)` — прогноз 5 дней
+- [x] Учёт лимита бесплатного тарифа (60 req/min)
+- [x] Активация только если в `.env` указан `OPENWEATHERMAP_API_KEY`
+- [x] Тест с замоканным httpx
 
 ### 6.2 🔧 BE — Бэкапы на Яндекс.Диск
 
