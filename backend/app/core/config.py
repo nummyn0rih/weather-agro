@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     # ── CORS ──────────────────────────────────────────────
     CORS_ORIGINS: str = "http://localhost:5173"
 
+    # ── Frontend ──────────────────────────────────────────
+    # Used to build invite URLs (POST /api/admin/invites returns
+    # `${FRONTEND_URL}/accept-invite?token=...`).
+    FRONTEND_URL: str = "http://localhost:5173"
+
     # ── Environment ───────────────────────────────────────
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"

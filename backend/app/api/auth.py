@@ -25,7 +25,9 @@ from app.schemas.auth import (
     TokenPair,
     UserMe,
 )
+from app.schemas.invite import InviteAccept, InvitePublic
 from app.services import auth as auth_service
+from app.services import invites as invites_service
 from app.services import telegram_bind
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -110,6 +112,59 @@ async def me(user: Annotated[User, Depends(get_current_user)]) -> UserMe:
         is_active=user.is_active,
         telegram_chat_id=user.telegram_chat_id,
         created_at=user.created_at,
+    )
+
+
+@router.get(
+    "/invites/{token}",
+    response_model=InvitePublic,
+    summary="Look up an invite by token (public, used by accept-invite page)",
+    description=(
+        "Returns the username + is_admin embedded in the invite so the "
+        "frontend can pre-fill the registration form. Rate-limited to "
+        "10/minute per IP. Returns 404 if the token does not exist, "
+        "410 if it has been revoked, accepted, or expired."
+    ),
+)
+@limiter.limit("10/minute")
+async def get_invite(
+    request: Request,
+    token: str,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> InvitePublic:
+    invite = await invites_service.get_invite_by_token(session, token)
+    return InvitePublic(username=invite.username, is_admin=invite.is_admin)
+
+
+@router.post(
+    "/invites/{token}/accept",
+    response_model=TokenPair,
+    summary="Accept an invite — create the user and auto-login",
+    description=(
+        "Public. On success creates the user with the role embedded in the "
+        "invite, marks the invite accepted, and returns access+refresh "
+        "tokens. Rate-limited to 5/minute per IP."
+    ),
+)
+@limiter.limit("5/minute")
+async def accept_invite(
+    request: Request,
+    token: str,
+    body: InviteAccept,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> TokenPair:
+    user = await invites_service.accept_invite(
+        session, token=token, password=body.password
+    )
+    log.info(
+        "auth.invite_accept_ok",
+        username=user.username,
+        is_admin=user.is_admin,
+        ip=get_remote_address(request),
+    )
+    return TokenPair(
+        access_token=create_access_token(user.username),
+        refresh_token=create_refresh_token(user.username),
     )
 
 

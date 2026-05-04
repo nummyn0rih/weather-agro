@@ -660,64 +660,64 @@ admin'ом и принятия инвайта новым пользовател�
 
 **DoD:**
 
-- [ ] Миграция Alembic: таблица `invites`
-  - [ ] `id` PK
-  - [ ] `username VARCHAR(255) NOT NULL` (по соглашению — email)
-  - [ ] `is_admin BOOLEAN NOT NULL DEFAULT FALSE`
-  - [ ] `token VARCHAR(64) UNIQUE NOT NULL` (URL-safe random)
-  - [ ] `created_by_id` FK → users.id
-  - [ ] `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`
-  - [ ] `expires_at TIMESTAMPTZ NOT NULL`
-  - [ ] `accepted_at TIMESTAMPTZ NULL`
-  - [ ] `revoked_at TIMESTAMPTZ NULL`
-  - [ ] Индекс по `token`
-- [ ] SQLAlchemy-модель `Invite`
-- [ ] Pydantic-схемы:
-  - [ ] `InviteCreate { username: EmailStr, is_admin: bool = False }`
-  - [ ] `InviteRead` (без token при list)
-  - [ ] `InviteAccept { password: str (min 8) }`
-- [ ] Сервис `app/services/invites.py`:
-  - [ ] `create_invite(session, username, is_admin, created_by)` —
+- [x] Миграция Alembic: таблица `invites`
+  - [x] `id` PK
+  - [x] `username VARCHAR(255) NOT NULL` (по соглашению — email)
+  - [x] `is_admin BOOLEAN NOT NULL DEFAULT FALSE`
+  - [x] `token VARCHAR(64) UNIQUE NOT NULL` (URL-safe random)
+  - [x] `created_by_id` FK → users.id
+  - [x] `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`
+  - [x] `expires_at TIMESTAMPTZ NOT NULL`
+  - [x] `accepted_at TIMESTAMPTZ NULL`
+  - [x] `revoked_at TIMESTAMPTZ NULL`
+  - [x] Индекс по `token`
+- [x] SQLAlchemy-модель `Invite`
+- [x] Pydantic-схемы:
+  - [x] `InviteCreate { username: EmailStr, is_admin: bool = False }`
+  - [x] `InviteRead` (без token при list)
+  - [x] `InviteAccept { password: str (min 8) }`
+- [x] Сервис `app/services/invites.py`:
+  - [x] `create_invite(session, username, is_admin, created_by)` —
         генерит token (`secrets.token_urlsafe(32)`),
         `expires_at = now() + 7 days`. Если username уже занят
         активным юзером — 409. Если уже есть активный неиспользованный
         инвайт на этот username — 409 (можно сначала revoke).
-  - [ ] `revoke_invite(session, invite_id)` — ставит `revoked_at`
-  - [ ] `get_invite_by_token(session, token)` — валидирует:
+  - [x] `revoke_invite(session, invite_id)` — ставит `revoked_at`
+  - [x] `get_invite_by_token(session, token)` — валидирует:
         не accepted, не revoked, не expired
-  - [ ] `accept_invite(session, token, password)` — создаёт User
+  - [x] `accept_invite(session, token, password)` — создаёт User
         (`is_admin` из инвайта, `is_active=True`, bcrypt-хеш),
         ставит `accepted_at`, возвращает User
-- [ ] Эндпоинты:
-  - [ ] `POST /api/admin/invites` — `require_admin`,
+- [x] Эндпоинты:
+  - [x] `POST /api/admin/invites` — `require_admin`,
         body `InviteCreate`, ответ `{id, token, invite_url}`,
         `invite_url` собирается из `FRONTEND_URL` env +
         `/accept-invite?token=...`
-  - [ ] `GET /api/admin/invites` — `require_admin`, список всех
+  - [x] `GET /api/admin/invites` — `require_admin`, список всех
         инвайтов со статусами (pending/accepted/revoked/expired)
-  - [ ] `DELETE /api/admin/invites/{id}` — `require_admin`,
+  - [x] `DELETE /api/admin/invites/{id}` — `require_admin`,
         revoke. 404 если уже accepted.
-  - [ ] `GET /api/auth/invites/{token}` — публичный, валидирует
+  - [x] `GET /api/auth/invites/{token}` — публичный, валидирует
         токен, возвращает `{username, is_admin}` для отображения на
         форме accept-invite. 404/410 при невалидном токене.
-  - [ ] `POST /api/auth/invites/{token}/accept` — публичный,
+  - [x] `POST /api/auth/invites/{token}/accept` — публичный,
         body `InviteAccept`, создаёт User, возвращает access+refresh
         токены (auto-login)
-- [ ] Rate limiting через slowapi на публичных эндпоинтах
+- [x] Rate limiting через slowapi на публичных эндпоинтах
       `/api/auth/invites/*`
-- [ ] Тесты:
-  - [ ] Admin создаёт инвайт → 201 с token и invite_url
-  - [ ] Не-admin создаёт инвайт → 403
-  - [ ] Создание инвайта на существующий username → 409
-  - [ ] GET по валидному токену → 200 с username/is_admin
-  - [ ] GET по revoked токену → 410
-  - [ ] GET по expired токену → 410
-  - [ ] GET по accepted токену → 410
-  - [ ] Accept валидного инвайта → 200, юзер создан, токены выданы
-  - [ ] Accept того же токена дважды → второй раз 410
-  - [ ] Revoke инвайта → 204; последующий GET → 410
-  - [ ] Revoke accepted инвайта → 404
-  - [ ] List возвращает все статусы корректно
+- [x] Тесты:
+  - [x] Admin создаёт инвайт → 201 с token и invite_url
+  - [x] Не-admin создаёт инвайт → 403
+  - [x] Создание инвайта на существующий username → 409
+  - [x] GET по валидному токену → 200 с username/is_admin
+  - [x] GET по revoked токену → 410
+  - [x] GET по expired токену → 410
+  - [x] GET по accepted токену → 410
+  - [x] Accept валидного инвайта → 200, юзер создан, токены выданы
+  - [x] Accept того же токена дважды → второй раз 410
+  - [x] Revoke инвайта → 204; последующий GET → 410
+  - [x] Revoke accepted инвайта → 404
+  - [x] List возвращает все статусы корректно
 
 **Замечания:**
 
@@ -765,6 +765,63 @@ admin'ом и принятия инвайта новым пользовател�
 - Удаление пользователя (DELETE) — out of scope; используем
   деактивацию. Это упрощает целостность FK с журналом действий и
   отчётами.
+
+### 6.3.0.3 🔧 BE — Защита существующих admin-эндпоинтов
+
+**Описание:** Sweep-аудит всех существующих эндпоинтов backend на
+предмет применения `require_admin` к тем, что должны быть доступны
+только администраторам. До этой задачи такие эндпоинты защищены
+только аутентификацией (любой залогиненный юзер имеет доступ),
+что было приемлемо при модели "admin-only система", но недопустимо
+после введения роли `user` через инвайты.
+
+**Зависит от:** → 6.3.0.2
+
+**DoD:**
+
+- [ ] Аудит-таблица в комментарии к PR/коммиту: список всех
+      эндпоинтов с пометкой "admin-only" / "user+admin" / "public".
+      Минимум должны быть проверены:
+  - [ ] Справочники (CRUD культур, фаз, операций, точек, и т.п.) —
+        чтение для всех авторизованных, запись только admin
+  - [ ] Настройки системы (`/api/settings/*`, если есть) — admin
+  - [ ] Управление расписаниями/cron (если есть UI) — admin
+  - [ ] Эндпоинты бэкапов (`/api/backups/*`, если есть) — admin
+  - [ ] Telegram-настройки на уровне системы (не персональная
+        привязка) — admin
+  - [ ] Эндпоинты управления API-ключами внешних сервисов
+        (если есть) — admin
+  - [ ] Эндпоинты загрузки/удаления чужих файлов — admin
+  - [ ] CRUD отчётов/журнала/событий — user+admin (свои записи),
+        admin может видеть/редактировать чужие (если применимо к
+        бизнес-логике — иначе все равны)
+- [ ] Каждый admin-only эндпоинт получает зависимость
+      `Depends(require_admin)`
+- [ ] Эндпоинты, которые остаются доступны user'ам, явно
+      используют `Depends(get_current_user)` — не оставляем без
+      какой-либо защиты
+- [ ] Тесты:
+  - [ ] Для каждого защищённого admin-эндпоинта: тест что user
+        получает 403, admin получает 2xx
+  - [ ] Для эндпоинтов записи в справочниках: user не может
+        создать/изменить/удалить, может читать
+  - [ ] Регрессия: существующие тесты на admin-доступ продолжают
+        проходить
+- [ ] Документация: в README или docs/ короткая таблица
+      "endpoint → required role" (можно автогенерируемая через
+      OpenAPI tags, можно вручную)
+
+**Замечания:**
+
+- Бизнес-правило "user видит/редактирует только свои записи" vs
+  "все видят всё" — out of scope этой задачи; здесь только role-
+  level доступ. Row-level политики, если потребуются — отдельная
+  задача (6.3.0.4 при необходимости).
+- При обнаружении эндпоинта без какой-либо защиты (anonymous)
+  который должен быть защищён — фиксировать как баг и закрывать
+  здесь же.
+- Список выше — стартовый чек-лист; реальный аудит должен быть
+  исчерпывающим (пройти по всем роутерам в `app/api/`).
 
 ### 6.3.0-FE 🎨 FE — UI для ролей, инвайтов и управления юзерами
 
