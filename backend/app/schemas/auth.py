@@ -32,3 +32,12 @@ class TelegramBindCodeResponse(BaseModel):
 class TelegramBindStatus(BaseModel):
     chat_id: int | None
     bound: bool
+
+
+class UserMe(BaseModel):
+    id: int
+    username: str
+    is_admin: bool
+    is_active: bool
+    telegram_chat_id: int | None = None
+    created_at: datetime

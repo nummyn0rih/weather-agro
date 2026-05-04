@@ -30,4 +30,19 @@ async def get_current_user(
     user = await auth_service.get_user_by_username(session, username)
     if not user:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    if not user.is_active:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User is inactive")
+    return user
+
+
+async def require_admin(
+    user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    """Restrict endpoint to admin users.
+
+    Inactive users are rejected by `get_current_user` upstream (401).
+    Non-admin authenticated users get 403.
+    """
+    if not user.is_admin:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin privileges required")
     return user

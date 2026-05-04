@@ -615,32 +615,32 @@ dependency `require_admin`, проверка `is_active` при логине и 
 
 **DoD:**
 
-- [ ] Миграция Alembic: добавляет колонки в `users`
-  - [ ] `is_admin BOOLEAN NOT NULL DEFAULT FALSE`
-  - [ ] `is_active BOOLEAN NOT NULL DEFAULT TRUE`
-  - [ ] Backfill: `is_admin=true` для пользователя с
+- [x] Миграция Alembic: добавляет колонки в `users`
+  - [x] `is_admin BOOLEAN NOT NULL DEFAULT FALSE`
+  - [x] `is_active BOOLEAN NOT NULL DEFAULT TRUE`
+  - [x] Backfill: `is_admin=true` для пользователя с
         `username == ${ADMIN_USERNAME}` (env)
-  - [ ] Все существующие пользователи получают `is_active=true`
-- [ ] Обновлена SQLAlchemy-модель `User` — добавлены оба поля
-- [ ] Сидер при создании admin устанавливает `is_admin=true`,
+  - [x] Все существующие пользователи получают `is_active=true`
+- [x] Обновлена SQLAlchemy-модель `User` — добавлены оба поля
+- [x] Сидер при создании admin устанавливает `is_admin=true`,
       `is_active=true`; при наличии существующего admin —
       проверяет/чинит флаги (idempotent)
-- [ ] Dependency `require_admin` в `app/api/deps.py`:
-  - [ ] Использует `get_current_user`
-  - [ ] Возвращает 403 если `is_admin=False`
-  - [ ] Возвращает 401 если пользователь неактивен (защита глубже)
-- [ ] `get_current_user` дополнительно проверяет `is_active=True`,
+- [x] Dependency `require_admin` в `app/api/deps.py`:
+  - [x] Использует `get_current_user`
+  - [x] Возвращает 403 если `is_admin=False`
+  - [x] Возвращает 401 если пользователь неактивен (защита глубже)
+- [x] `get_current_user` дополнительно проверяет `is_active=True`,
       иначе 401 с сообщением "User is inactive"
-- [ ] Login endpoint проверяет `is_active=True` перед выдачей токена,
+- [x] Login endpoint проверяет `is_active=True` перед выдачей токена,
       иначе 401 "User is inactive"
-- [ ] Тесты:
-  - [ ] `require_admin` пропускает admin
-  - [ ] `require_admin` возвращает 403 для обычного user
-  - [ ] `require_admin` возвращает 401 для неавторизованного запроса
-  - [ ] Логин неактивного пользователя → 401
-  - [ ] `get_current_user` с токеном неактивного юзера → 401
-  - [ ] Сидер на повторном запуске не дублирует и не сбрасывает флаги
-- [ ] Эндпоинт `GET /api/auth/me` возвращает поля `is_admin`,
+- [x] Тесты:
+  - [x] `require_admin` пропускает admin
+  - [x] `require_admin` возвращает 403 для обычного user
+  - [x] `require_admin` возвращает 401 для неавторизованного запроса
+  - [x] Логин неактивного пользователя → 401
+  - [x] `get_current_user` с токеном неактивного юзера → 401
+  - [x] Сидер на повторном запуске не дублирует и не сбрасывает флаги
+- [x] Эндпоинт `GET /api/auth/me` возвращает поля `is_admin`,
       `is_active` (если эндпоинт уже есть — расширить ответ; если
       нет — создать в этой же задаче)
 

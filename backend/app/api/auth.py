@@ -23,6 +23,7 @@ from app.schemas.auth import (
     TelegramBindCodeResponse,
     TelegramBindStatus,
     TokenPair,
+    UserMe,
 )
 from app.services import auth as auth_service
 from app.services import telegram_bind
@@ -54,7 +55,15 @@ async def login(
         )
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
 
-    log.info("auth.login_ok", username=user.username)
+    if not user.is_active:
+        log.warning(
+            "auth.login_inactive",
+            username=user.username,
+            ip=get_remote_address(request),
+        )
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User is inactive")
+
+    log.info("auth.login_ok", username=user.username, is_admin=user.is_admin)
     return TokenPair(
         access_token=create_access_token(user.username),
         refresh_token=create_refresh_token(user.username),
@@ -84,6 +93,24 @@ async def refresh(body: RefreshRequest) -> AccessToken:
 )
 async def logout() -> None:
     return None
+
+
+@router.get(
+    "/me",
+    response_model=UserMe,
+    summary="Current authenticated user",
+    description="Returns the profile of the user identified by the access token, "
+    "including the `is_admin` and `is_active` flags.",
+)
+async def me(user: Annotated[User, Depends(get_current_user)]) -> UserMe:
+    return UserMe(
+        id=user.id,
+        username=user.username,
+        is_admin=user.is_admin,
+        is_active=user.is_active,
+        telegram_chat_id=user.telegram_chat_id,
+        created_at=user.created_at,
+    )
 
 
 @router.post(
