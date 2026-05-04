@@ -368,7 +368,7 @@
 - [x] Дедупликация: не слать повторно одинаковый алерт в пределах N часов
 - [x] Тесты с разными условиями
 
-### 4.2.1 🔧 BE — Fix TZ: dedup сравнение в alerts engine
+### 4.2.1 🔧 BE — Fix TZ: dedup сравнение в alerts engine ✅
 
 **Описание:** В `app/services/alerts/engine.py:185` сравнение `last >= cutoff` падает с `TypeError: can't compare offset-naive and offset-aware datetimes` при прогоне на SQLite (aiosqlite драйвер возвращает naive datetime даже из колонки `TIMESTAMPTZ`). Postgres-prod не падает, но дефект скрытый — любой драйвер, теряющий tzinfo при чтении, сломает дедуп.
 
@@ -376,11 +376,11 @@
 
 **DoD:**
 
-- [ ] `_last_triggered_at` в `engine.py` коэрсит naive → aware UTC перед возвратом
-- [ ] Grep по `backend/app/services/alerts/` — все `datetime.now()` используют `tz=UTC`
-- [ ] `tests/test_alert_engine.py::test_dedup_blocks_repeat_within_window` зелёный
-- [ ] `tests/test_alert_engine.py::test_dedup_allows_repeat_after_window` зелёный
-- [ ] Регрессии нет: полный прогон pytest без новых fail
+- [x] `_last_triggered_at` в `engine.py` коэрсит naive → aware UTC перед возвратом
+- [x] Grep по `backend/app/services/alerts/` — все `datetime.now()` используют `tz=UTC`
+- [x] `tests/test_alert_engine.py::test_dedup_blocks_repeat_within_window` зелёный
+- [x] `tests/test_alert_engine.py::test_dedup_allows_repeat_after_window` зелёный
+- [x] Регрессии нет: полный прогон pytest без новых fail
 
 ### 4.3 🔧 BE — Telegram-бот (каркас)
 
@@ -553,14 +553,14 @@
 - [x] Просмотр события: данные + блок «Погода в этот день» + галерея фото
 - [x] Редактирование, удаление с подтверждением
 
-### 5.5 ⚙️ FE-F — Страница «Отчёты»
+### 5.5 ⚙️ FE-F — Страница «Отчёты» ✅
 
 **Зависит от:** → 5.3, 5.3.1, 2.4
 **DoD:**
 
-- [ ] Форма: выбор локации, сезона
-- [ ] Кнопка «Сгенерировать» → запрос на backend, прогресс-индикатор
-- [ ] Список ранее сгенерированных отчётов с кнопками «Скачать», «Удалить»
+- [x] Форма: выбор локации, сезона
+- [x] Кнопка «Сгенерировать» → запрос на backend, прогресс-индикатор
+- [x] Список ранее сгенерированных отчётов с кнопками «Скачать», «Удалить»
 
 ---
 

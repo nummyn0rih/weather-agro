@@ -12,6 +12,7 @@ import { EventsPage } from '@/pages/EventsPage';
 import { HomePage } from '@/pages/HomePage';
 import { LocationsPage } from '@/pages/LocationsPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { ReportsPage } from '@/pages/ReportsPage';
 import { StubPage } from '@/pages/StubPage';
 import { TablesPage } from '@/pages/TablesPage';
 
@@ -35,7 +36,7 @@ function App() {
             <Route path="/events" element={<EventsPage />} />
             <Route path="/locations" element={<LocationsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
-            <Route path="/reports" element={<StubPage title="Отчёты" />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route
               path="/settings"
               element={<StubPage title="Настройки" />}
