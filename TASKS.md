@@ -480,10 +480,11 @@
 **Описание:** GET-эндпоинт для списка культур (для FE-фильтров и форм).
 **Зависит от:** → 1.4 (модель Crop, сидер)
 **DoD:**
+
 - [x] GET /api/crops → список { id, name, base_temperature, optimal_temp_min/max } из таблицы crops
 - [x] Pydantic v2 схема CropResponse
 - [x] Сортировка по name
-- [x] Auth: требует Bearer token (как остальные /api/*)
+- [x] Auth: требует Bearer token (как остальные /api/\*)
 - [x] Тест happy path: GET → 200 + список из сидера
 - [x] Тест 401 без токена
 
@@ -577,6 +578,19 @@
 - [x] Активация только если в `.env` указан `OPENWEATHERMAP_API_KEY`
 - [x] Тест с замоканным httpx
 
+### 6.1.1 🔧 BE — Fix: TZ-aware агрегация в OpenWeatherMap forecast
+
+Зависит от: → 6.1
+Блокирует: интеграцию OWM как источника alerts engine
+
+DoD:
+
+- [ ] `fetch_forecast` группирует 3h-бакеты по локальной TZ локации
+- [ ] TZ берётся из `Location.timezone` (новое поле, nullable, default UTC) ИЛИ вычисляется через `timezonefinder` из (lat, lon)
+- [ ] Решение зафиксировано в ADR (новый или дополнение к существующему)
+- [ ] Тест: для локации UTC+3 заморозок в 02:00 локального попадает в правильный день
+- [ ] `fetch_current.d` тоже использует локальную TZ (или явно документировано почему UTC ок для current)
+
 ### 6.2 🔧 BE — Бэкапы на Яндекс.Диск
 
 **Описание:** Автоматические бэкапы БД.
@@ -591,20 +605,216 @@
 - [ ] CLI-скрипт восстановления `scripts/restore.py`
 - [ ] Логирование в БД (таблица `backup_logs`)
 
-### 6.3.0 🔧 BE — `is_admin` на User + dependency `require_admin`
+### 6.3.0 🔧 BE — Роли пользователей и активность
 
-**Описание:** Forward-compat поле роли + зависимость FastAPI для admin-only эндпоинтов. Блокер для 6.3 и 6.3.2 (PRD §11 — единственный пользователь, но эндпоинты настроек/справочников должны иметь явный admin-gate).
+**Описание:** Добавление поля `is_admin` и `is_active` к модели `User`,
+dependency `require_admin`, проверка `is_active` при логине и в
+`get_current_user`. Базис для admin-эндпоинтов и инвайтов.
 
-**Зависит от:** → 1.4
+**Зависит от:** → 1.4 (auth уже реализован), → 1.3 (модели/миграции)
 
 **DoD:**
 
-- [ ] Поле `User.is_admin: bool = False` (server_default `false`)
-- [ ] Alembic-миграция: добавить колонку, backfill `true` для пользователя с `username == ADMIN_USERNAME` (env)
-- [ ] Сидер `app/scripts/seed.py`: при создании admin-пользователя выставлять `is_admin=True`
-- [ ] `app/api/deps.py`: `require_admin = Depends(get_current_user)` + проверка `if not user.is_admin: raise HTTPException(403)`
-- [ ] Тесты: admin-пользователь проходит, обычный — 403
-- [ ] `alembic downgrade -1` чисто
+- [ ] Миграция Alembic: добавляет колонки в `users`
+  - [ ] `is_admin BOOLEAN NOT NULL DEFAULT FALSE`
+  - [ ] `is_active BOOLEAN NOT NULL DEFAULT TRUE`
+  - [ ] Backfill: `is_admin=true` для пользователя с
+        `username == ${ADMIN_USERNAME}` (env)
+  - [ ] Все существующие пользователи получают `is_active=true`
+- [ ] Обновлена SQLAlchemy-модель `User` — добавлены оба поля
+- [ ] Сидер при создании admin устанавливает `is_admin=true`,
+      `is_active=true`; при наличии существующего admin —
+      проверяет/чинит флаги (idempotent)
+- [ ] Dependency `require_admin` в `app/api/deps.py`:
+  - [ ] Использует `get_current_user`
+  - [ ] Возвращает 403 если `is_admin=False`
+  - [ ] Возвращает 401 если пользователь неактивен (защита глубже)
+- [ ] `get_current_user` дополнительно проверяет `is_active=True`,
+      иначе 401 с сообщением "User is inactive"
+- [ ] Login endpoint проверяет `is_active=True` перед выдачей токена,
+      иначе 401 "User is inactive"
+- [ ] Тесты:
+  - [ ] `require_admin` пропускает admin
+  - [ ] `require_admin` возвращает 403 для обычного user
+  - [ ] `require_admin` возвращает 401 для неавторизованного запроса
+  - [ ] Логин неактивного пользователя → 401
+  - [ ] `get_current_user` с токеном неактивного юзера → 401
+  - [ ] Сидер на повторном запуске не дублирует и не сбрасывает флаги
+- [ ] Эндпоинт `GET /api/auth/me` возвращает поля `is_admin`,
+      `is_active` (если эндпоинт уже есть — расширить ответ; если
+      нет — создать в этой же задаче)
+
+**Замечания:**
+
+- Не защищаем существующие эндпоинты `require_admin` в этой задаче —
+  это сделают задачи где данные эндпоинты создаются/уточняются
+- Регистронезависимое сравнение username при логине — out of scope
+  (опциональный backlog-пункт)
+
+### 6.3.0.1 🔧 BE — Инвайт-система
+
+**Описание:** Модель `Invite` и эндпоинты для создания/отзыва инвайтов
+admin'ом и принятия инвайта новым пользователем.
+
+**Зависит от:** → 6.3.0
+
+**DoD:**
+
+- [ ] Миграция Alembic: таблица `invites`
+  - [ ] `id` PK
+  - [ ] `username VARCHAR(255) NOT NULL` (по соглашению — email)
+  - [ ] `is_admin BOOLEAN NOT NULL DEFAULT FALSE`
+  - [ ] `token VARCHAR(64) UNIQUE NOT NULL` (URL-safe random)
+  - [ ] `created_by_id` FK → users.id
+  - [ ] `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`
+  - [ ] `expires_at TIMESTAMPTZ NOT NULL`
+  - [ ] `accepted_at TIMESTAMPTZ NULL`
+  - [ ] `revoked_at TIMESTAMPTZ NULL`
+  - [ ] Индекс по `token`
+- [ ] SQLAlchemy-модель `Invite`
+- [ ] Pydantic-схемы:
+  - [ ] `InviteCreate { username: EmailStr, is_admin: bool = False }`
+  - [ ] `InviteRead` (без token при list)
+  - [ ] `InviteAccept { password: str (min 8) }`
+- [ ] Сервис `app/services/invites.py`:
+  - [ ] `create_invite(session, username, is_admin, created_by)` —
+        генерит token (`secrets.token_urlsafe(32)`),
+        `expires_at = now() + 7 days`. Если username уже занят
+        активным юзером — 409. Если уже есть активный неиспользованный
+        инвайт на этот username — 409 (можно сначала revoke).
+  - [ ] `revoke_invite(session, invite_id)` — ставит `revoked_at`
+  - [ ] `get_invite_by_token(session, token)` — валидирует:
+        не accepted, не revoked, не expired
+  - [ ] `accept_invite(session, token, password)` — создаёт User
+        (`is_admin` из инвайта, `is_active=True`, bcrypt-хеш),
+        ставит `accepted_at`, возвращает User
+- [ ] Эндпоинты:
+  - [ ] `POST /api/admin/invites` — `require_admin`,
+        body `InviteCreate`, ответ `{id, token, invite_url}`,
+        `invite_url` собирается из `FRONTEND_URL` env +
+        `/accept-invite?token=...`
+  - [ ] `GET /api/admin/invites` — `require_admin`, список всех
+        инвайтов со статусами (pending/accepted/revoked/expired)
+  - [ ] `DELETE /api/admin/invites/{id}` — `require_admin`,
+        revoke. 404 если уже accepted.
+  - [ ] `GET /api/auth/invites/{token}` — публичный, валидирует
+        токен, возвращает `{username, is_admin}` для отображения на
+        форме accept-invite. 404/410 при невалидном токене.
+  - [ ] `POST /api/auth/invites/{token}/accept` — публичный,
+        body `InviteAccept`, создаёт User, возвращает access+refresh
+        токены (auto-login)
+- [ ] Rate limiting через slowapi на публичных эндпоинтах
+      `/api/auth/invites/*`
+- [ ] Тесты:
+  - [ ] Admin создаёт инвайт → 201 с token и invite_url
+  - [ ] Не-admin создаёт инвайт → 403
+  - [ ] Создание инвайта на существующий username → 409
+  - [ ] GET по валидному токену → 200 с username/is_admin
+  - [ ] GET по revoked токену → 410
+  - [ ] GET по expired токену → 410
+  - [ ] GET по accepted токену → 410
+  - [ ] Accept валидного инвайта → 200, юзер создан, токены выданы
+  - [ ] Accept того же токена дважды → второй раз 410
+  - [ ] Revoke инвайта → 204; последующий GET → 410
+  - [ ] Revoke accepted инвайта → 404
+  - [ ] List возвращает все статусы корректно
+
+**Замечания:**
+
+- `FRONTEND_URL` добавить в `.env.example`
+- Поле `username` в `InviteCreate` валидируется как `EmailStr`
+- Вычисление статуса "expired" — на лету при чтении, не cron
+
+### 6.3.0.2 🔧 BE — Admin-эндпоинты управления пользователями
+
+**Описание:** Список пользователей, сброс пароля, деактивация/
+активация, изменение роли.
+
+**Зависит от:** → 6.3.0.1
+
+**DoD:**
+
+- [ ] Pydantic-схемы:
+  - [ ] `UserRead { id, username, is_admin, is_active, created_at }`
+  - [ ] `UserPasswordReset { password: str (min 8) }`
+  - [ ] `UserUpdate { is_admin?: bool, is_active?: bool }`
+- [ ] Эндпоинты (все `require_admin`):
+  - [ ] `GET /api/admin/users` — список всех пользователей
+  - [ ] `GET /api/admin/users/{id}` — один пользователь
+  - [ ] `PATCH /api/admin/users/{id}` — обновление is_admin/is_active
+  - [ ] `POST /api/admin/users/{id}/reset-password` —
+        body `UserPasswordReset`, обновляет хеш пароля
+- [ ] Защита от self-lockout:
+  - [ ] Admin не может снять `is_admin` с самого себя → 400
+  - [ ] Admin не может деактивировать самого себя → 400
+  - [ ] Нельзя удалить/деактивировать последнего активного admin'a
+        → 400 с понятным сообщением
+- [ ] Тесты:
+  - [ ] Admin видит список юзеров
+  - [ ] Не-admin → 403
+  - [ ] Сброс пароля работает (старый не подходит, новый подходит)
+  - [ ] Деактивация юзера → юзер не может залогиниться
+  - [ ] Реактивация → может
+  - [ ] Self-demote → 400
+  - [ ] Self-deactivate → 400
+  - [ ] Деактивация последнего admin'a → 400
+  - [ ] Снятие is_admin с последнего admin'a → 400
+
+**Замечания:**
+
+- Удаление пользователя (DELETE) — out of scope; используем
+  деактивацию. Это упрощает целостность FK с журналом действий и
+  отчётами.
+
+### 6.3.0-FE 🎨 FE — UI для ролей, инвайтов и управления юзерами
+
+**Описание:** Frontend-часть для small team auth: admin-страница
+управления пользователями, страница принятия инвайта, role-based
+guards для роутов.
+
+**Зависит от:** → 6.3.0.2
+
+**DoD:**
+
+- [ ] Стор/контекст auth расширен: `user.is_admin`, `user.is_active`
+      доступны после логина и через `/api/auth/me`
+- [ ] Route guard `<RequireAdmin>` — редиректит не-admin'ов с
+      admin-страниц на dashboard с toast "Доступ запрещён"
+- [ ] Страница `/admin/users`:
+  - [ ] Таблица: username, роль (admin/user), статус (активен/нет),
+        дата создания
+  - [ ] Кнопка "Создать инвайт" → модалка
+        (поле email с валидацией, чекбокс "admin")
+  - [ ] После создания — модалка с готовой инвайт-ссылкой и
+        кнопкой "Копировать"
+  - [ ] Действия в строке: "Сбросить пароль", "Деактивировать"/
+        "Активировать", "Сделать admin"/"Снять admin"
+  - [ ] Подтверждения для деструктивных действий
+  - [ ] Серверные ошибки 400 (self-lockout) показываются в toast
+- [ ] Страница `/admin/invites`:
+  - [ ] Список инвайтов со статусами (pending/accepted/revoked/
+        expired)
+  - [ ] Для pending — кнопки "Скопировать ссылку", "Отозвать"
+  - [ ] (можно объединить с `/admin/users` — на усмотрение
+        реализатора, но в DoD как отдельная страница для ясности)
+- [ ] Страница `/accept-invite?token=...` (публичная):
+  - [ ] При загрузке — `GET /api/auth/invites/{token}`
+  - [ ] Если токен невалиден/expired/revoked/accepted —
+        показать соответствующее сообщение
+  - [ ] Если валиден — форма: показывает username (readonly),
+        поле "Пароль", "Повтор пароля", кнопка "Создать аккаунт"
+  - [ ] После успешного accept — auto-login (токены сохранены) и
+        редирект на dashboard
+- [ ] В layout/sidebar пункт "Управление пользователями" виден
+      только admin'ам
+- [ ] Login-форма: при ответе 401 "User is inactive" — показать
+      понятное сообщение "Учётная запись отключена. Обратитесь к
+      администратору."
+
+**Замечания:**
+
+- Дизайн в стиле существующих admin-страниц (справочники)
+- Email-валидация на форме инвайта — нативная HTML5 + бэк всё равно валидирует EmailStr
 
 ### 6.3 🔧 BE — Эндпоинты настроек (4 группы)
 
