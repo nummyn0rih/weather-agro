@@ -734,31 +734,31 @@ admin'ом и принятия инвайта новым пользовател�
 
 **DoD:**
 
-- [ ] Pydantic-схемы:
-  - [ ] `UserRead { id, username, is_admin, is_active, created_at }`
-  - [ ] `UserPasswordReset { password: str (min 8) }`
-  - [ ] `UserUpdate { is_admin?: bool, is_active?: bool }`
-- [ ] Эндпоинты (все `require_admin`):
-  - [ ] `GET /api/admin/users` — список всех пользователей
-  - [ ] `GET /api/admin/users/{id}` — один пользователь
-  - [ ] `PATCH /api/admin/users/{id}` — обновление is_admin/is_active
-  - [ ] `POST /api/admin/users/{id}/reset-password` —
+- [x] Pydantic-схемы:
+  - [x] `UserRead { id, username, is_admin, is_active, created_at }`
+  - [x] `UserPasswordReset { password: str (min 8) }`
+  - [x] `UserUpdate { is_admin?: bool, is_active?: bool }`
+- [x] Эндпоинты (все `require_admin`):
+  - [x] `GET /api/admin/users` — список всех пользователей
+  - [x] `GET /api/admin/users/{id}` — один пользователь
+  - [x] `PATCH /api/admin/users/{id}` — обновление is_admin/is_active
+  - [x] `POST /api/admin/users/{id}/reset-password` —
         body `UserPasswordReset`, обновляет хеш пароля
-- [ ] Защита от self-lockout:
-  - [ ] Admin не может снять `is_admin` с самого себя → 400
-  - [ ] Admin не может деактивировать самого себя → 400
-  - [ ] Нельзя удалить/деактивировать последнего активного admin'a
+- [x] Защита от self-lockout:
+  - [x] Admin не может снять `is_admin` с самого себя → 400
+  - [x] Admin не может деактивировать самого себя → 400
+  - [x] Нельзя удалить/деактивировать последнего активного admin'a
         → 400 с понятным сообщением
-- [ ] Тесты:
-  - [ ] Admin видит список юзеров
-  - [ ] Не-admin → 403
-  - [ ] Сброс пароля работает (старый не подходит, новый подходит)
-  - [ ] Деактивация юзера → юзер не может залогиниться
-  - [ ] Реактивация → может
-  - [ ] Self-demote → 400
-  - [ ] Self-deactivate → 400
-  - [ ] Деактивация последнего admin'a → 400
-  - [ ] Снятие is_admin с последнего admin'a → 400
+- [x] Тесты:
+  - [x] Admin видит список юзеров
+  - [x] Не-admin → 403
+  - [x] Сброс пароля работает (старый не подходит, новый подходит)
+  - [x] Деактивация юзера → юзер не может залогиниться
+  - [x] Реактивация → может
+  - [x] Self-demote → 400
+  - [x] Self-deactivate → 400
+  - [x] Деактивация последнего admin'a → 400
+  - [x] Снятие is_admin с последнего admin'a → 400
 
 **Замечания:**
 

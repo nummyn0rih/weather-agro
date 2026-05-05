@@ -11,6 +11,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.api.admin_invites import router as admin_invites_router
+from app.api.admin_users import router as admin_users_router
 from app.api.alert_history import router as alert_history_router
 from app.api.alerts import router as alerts_router
 from app.api.analytics import router as analytics_router
@@ -81,6 +82,7 @@ def create_app() -> FastAPI:
     app.include_router(crops_router, prefix="/api")
     app.include_router(reports_router, prefix="/api")
     app.include_router(admin_invites_router, prefix="/api")
+    app.include_router(admin_users_router, prefix="/api")
 
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     app.mount(
