@@ -725,6 +725,107 @@ admin'ом и принятия инвайта новым пользовател�
 - Поле `username` в `InviteCreate` валидируется как `EmailStr`
 - Вычисление статуса "expired" — на лету при чтении, не cron
 
+## 6.3.0-FE.1 — Foundation: auth store + AdminRoute + UI deps
+
+**Статус:** ✅ done
+
+**Цель:** Подготовить инфраструктуру под admin-страницы. Без новых страниц.
+
+**Скоуп:**
+
+- Установить deps: react-hook-form, zod, @hookform/resolvers, sonner
+- Добавить shadcn: form, sonner, checkbox, switch, dropdown-menu, badge, tooltip
+- Расширить `stores/auth.ts`: userId, isAdmin, isActive, bootstrapping; методы setSession (с fetch /auth/me), refreshUserInfo, bootstrap, clearSession
+- ProtectedRoute учитывает bootstrapping (лоадер вместо мгновенного редиректа)
+- Создать `components/AdminRoute.tsx`
+- Подключить `<Toaster />` в App.tsx
+- Bootstrap-вызов на старте App
+
+**Acceptance:**
+
+- `npm run build` — 0 ошибок
+- Login админом → стор: `isAdmin=true`
+- Login обычным → `isAdmin=false`
+- F5 на защищённой странице → лоадер, затем страница (не редирект на login)
+- `/auth/me` вызывается один раз после login и один раз на bootstrap
+- `is_active=false` от /auth/me → автоматический logout
+
+---
+
+## 6.3.0-FE.2 — Accept Invite page
+
+**Статус:** ⏳ pending (после FE.1)
+
+**Цель:** Публичная страница `/accept-invite/:token` для регистрации по инвайту.
+
+**Скоуп:**
+
+- `pages/AcceptInvitePage.tsx` — без auth-guard
+- На mount: `GET /auth/invites/{token}` → показать email/имя или ошибку (invalid/expired/used)
+- Форма (rhf+zod): username (3-50, [a-zA-Z0-9_]+), password (≥8), passwordConfirm (refine match)
+- Submit: `POST /auth/accept-invite` с {token, username, password}
+- Успех → toast "Аккаунт создан, войдите в систему" → navigate `/login`
+- Роут в `App.tsx`
+
+**Acceptance:**
+
+- Валидный токен → форма видна, инфа об инвайте отображается
+- Невалидный/истёкший/использованный → экран ошибки
+- Submit с валидными данными → успех + редирект
+- Backend errors → inline или toast
+
+---
+
+## 6.3.0-FE.3 — Admin Users page
+
+**Статус:** ⏳ pending (после FE.2)
+
+**Цель:** `/admin/users` — управление пользователями.
+
+**Скоуп:**
+
+- `pages/admin/UsersPage.tsx` под AdminRoute
+- TanStack Query: список `GET /admin/users`
+- Таблица (shadcn): id, username, email, is_admin (Badge), is_active (Badge), created_at, actions
+- Actions (dropdown-menu):
+  - Сделать/снять админа → `PATCH /admin/users/{id}` с {is_admin}
+  - Активировать/деактивировать → `PATCH /admin/users/{id}` с {is_active} (AlertDialog для деактивации)
+  - Сбросить пароль → диалог с input + кнопка "Сгенерировать" (16 символов crypto.getRandomValues) + "Скопировать" + предупреждение "Сохраните пароль до отправки" → `POST /admin/users/{id}/reset-password` с {password}
+- Self-lockout 4xx → sonner error toast
+- Mutations + invalidateQueries
+- Роут `/admin/users` в App.tsx
+- Ссылка в header/menu только если isAdmin
+
+**Acceptance:**
+
+- Таблица грузится, badges корректны
+- Все три actions работают, инвалидация списка
+- Reset-password диалог: генератор, copy, валидация ≥8
+- Деактивация себя → backend error → toast
+
+---
+
+## 6.3.0-FE.4 — Admin Invites page
+
+**Статус:** ⏳ pending (после FE.3)
+
+**Цель:** `/admin/invites` — создание и отзыв инвайтов.
+
+**Скоуп:**
+
+- `pages/admin/InvitesPage.tsx` под AdminRoute
+- Секция "Создать инвайт": форма (rhf+zod) — email, name (optional), is_admin (Checkbox) → `POST /admin/invites` → модалка с готовой ссылкой `${origin}/accept-invite/${token}` + "Скопировать"
+- Секция "Pending invites": таблица (email, created_by, created_at, expires_at, action "Отозвать") → `DELETE /admin/invites/{id}` (AlertDialog)
+- TanStack Query + invalidate
+- Роут в App.tsx
+- Ссылка в header/menu только если isAdmin
+
+**Acceptance:**
+
+- Создание инвайта показывает копируемую ссылку
+- Список pending обновляется после create/revoke
+- Revoke с подтверждением
+
 ### 6.3.0.2 🔧 BE — Admin-эндпоинты управления пользователями
 
 **Описание:** Список пользователей, сброс пароля, деактивация/

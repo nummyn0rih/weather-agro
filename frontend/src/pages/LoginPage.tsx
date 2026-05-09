@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { login as loginRequest } from '@/lib/auth-api';
-import { useAuthStore } from '@/stores/auth';
+import { AccountDeactivatedError, useAuthStore } from '@/stores/auth';
 
 interface LocationState {
   from?: { pathname: string };
@@ -30,16 +31,24 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
 
   const mutation = useMutation({
-    mutationFn: loginRequest,
-    onSuccess: (data, variables) => {
-      setSession(variables.username, data.access_token, data.refresh_token);
+    mutationFn: async (input: { username: string; password: string }) => {
+      const tokens = await loginRequest(input);
+      await setSession(input.username, tokens.access_token, tokens.refresh_token);
+      return tokens;
+    },
+    onSuccess: () => {
       const redirectTo =
         (location.state as LocationState | null)?.from?.pathname ?? '/';
       void navigate(redirectTo, { replace: true });
     },
+    onError: (error) => {
+      if (error instanceof AccountDeactivatedError) {
+        toast.error('Аккаунт деактивирован');
+      }
+    },
   });
 
-  if (isAuthenticated) {
+  if (isAuthenticated && !mutation.isPending && !mutation.isError) {
     return <Navigate to="/" replace />;
   }
 
@@ -114,6 +123,9 @@ export function LoginPage() {
 }
 
 function extractErrorMessage(error: unknown): string {
+  if (error instanceof AccountDeactivatedError) {
+    return 'Аккаунт деактивирован. Обратитесь к администратору.';
+  }
   if (isAxiosError(error)) {
     const status = error.response?.status;
     if (status === 401) return 'Неверный логин или пароль.';
