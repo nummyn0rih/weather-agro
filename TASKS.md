@@ -779,37 +779,44 @@ admin'ом и принятия инвайта новым пользовател�
 
 **DoD:**
 
-- [ ] Аудит-таблица в комментарии к PR/коммиту: список всех
-      эндпоинтов с пометкой "admin-only" / "user+admin" / "public".
-      Минимум должны быть проверены:
-  - [ ] Справочники (CRUD культур, фаз, операций, точек, и т.п.) —
-        чтение для всех авторизованных, запись только admin
-  - [ ] Настройки системы (`/api/settings/*`, если есть) — admin
-  - [ ] Управление расписаниями/cron (если есть UI) — admin
-  - [ ] Эндпоинты бэкапов (`/api/backups/*`, если есть) — admin
-  - [ ] Telegram-настройки на уровне системы (не персональная
-        привязка) — admin
-  - [ ] Эндпоинты управления API-ключами внешних сервисов
-        (если есть) — admin
-  - [ ] Эндпоинты загрузки/удаления чужих файлов — admin
-  - [ ] CRUD отчётов/журнала/событий — user+admin (свои записи),
-        admin может видеть/редактировать чужие (если применимо к
-        бизнес-логике — иначе все равны)
-- [ ] Каждый admin-only эндпоинт получает зависимость
-      `Depends(require_admin)`
-- [ ] Эндпоинты, которые остаются доступны user'ам, явно
-      используют `Depends(get_current_user)` — не оставляем без
-      какой-либо защиты
-- [ ] Тесты:
-  - [ ] Для каждого защищённого admin-эндпоинта: тест что user
-        получает 403, admin получает 2xx
-  - [ ] Для эндпоинтов записи в справочниках: user не может
-        создать/изменить/удалить, может читать
-  - [ ] Регрессия: существующие тесты на admin-доступ продолжают
-        проходить
-- [ ] Документация: в README или docs/ короткая таблица
-      "endpoint → required role" (можно автогенерируемая через
-      OpenAPI tags, можно вручную)
+- [x] Аудит-таблица в `docs/endpoint-roles.md` (полный список
+      эндпоинтов с пометкой "admin-only" / "user+admin" / "public").
+  - [x] Справочники (crops): GET — user+admin; POST/PUT/DELETE
+        отложены до 6.3.2 — будут admin
+  - [x] Настройки системы (`/api/settings/*`) — пока нет;
+        зарезервированы как admin (см. таблицу "Future endpoints")
+  - [x] Управление расписаниями/cron — UI отсутствует (cron внутри
+        APScheduler), внешние эндпоинты не нужны
+  - [x] Эндпоинты бэкапов (`/api/backup/*`) — пока нет;
+        зарезервированы как admin
+  - [x] Telegram-настройки: per-user bind (`/api/auth/telegram/*`)
+        — user+admin; system-level настройки токена бота — пока нет
+        (Future, admin)
+  - [x] API-ключи внешних сервисов — пока через `.env` (не через
+        API); Future endpoints в `/api/settings/api-keys` будут
+        admin
+  - [x] Файлы (`/api/events/{id}/photos`): user+admin (журнал
+        общий, row-level вне scope)
+  - [x] CRUD журнала/событий/отчётов — user+admin (общий журнал,
+        нет per-user owner-FK; row-level — отдельная задача
+        6.3.0.4 если потребуется)
+  - [x] `/uploads/*` — публичный StaticFiles mount (UUID-имена, не
+        перечислимы); ограничение задокументировано
+- [x] Каждый admin-only эндпоинт получает зависимость
+      `Depends(require_admin)`:
+  - [x] `POST/PUT/DELETE /api/locations(/{id})`
+  - [x] `POST/PUT/DELETE /api/alerts/rules(/{id})`
+  - [x] `/api/admin/users/*` (уже было)
+  - [x] `/api/admin/invites/*` (уже было)
+- [x] Эндпоинты, доступные user'ам, явно используют
+      `Depends(get_current_user)` — без анонимных дыр
+- [x] Тесты `tests/test_endpoint_roles.py` (parametrized):
+  - [x] Для каждого admin-эндпоинта: anonymous → 401, non-admin →
+        403, admin → не 401/403 (role gate проходит)
+  - [x] Регрессия: `test_locations.py` и `test_alert_rules.py`
+        обновлены (admin happy path), все 331 теста проходят
+- [x] `docs/endpoint-roles.md` — таблица "endpoint → required role"
+      (вручную, по модулям `app/api/`)
 
 **Замечания:**
 

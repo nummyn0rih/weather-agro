@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_admin
 from app.db.models import AlertRule, User
 from app.db.session import get_db
 from app.schemas.alert import (
@@ -43,7 +43,7 @@ async def list_rules(
 async def create_rule(
     body: AlertRuleCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _user: Annotated[User, Depends(get_current_user)],
+    _admin: Annotated[User, Depends(require_admin)],
 ) -> AlertRule:
     obj = await rules_service.create_rule(session, body)
     log.info("alert_rule.created", id=obj.id, name=obj.name)
@@ -75,7 +75,7 @@ async def update_rule(
     rule_id: int,
     body: AlertRuleUpdate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _user: Annotated[User, Depends(get_current_user)],
+    _admin: Annotated[User, Depends(require_admin)],
 ) -> AlertRule:
     existing = await rules_service.get_rule(session, rule_id)
     if not existing:
@@ -115,7 +115,7 @@ async def update_rule(
 async def delete_rule(
     rule_id: int,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _user: Annotated[User, Depends(get_current_user)],
+    _admin: Annotated[User, Depends(require_admin)],
 ) -> None:
     deleted = await rules_service.delete_rule(session, rule_id)
     if not deleted:

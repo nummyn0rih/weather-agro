@@ -101,7 +101,13 @@ def client(monkeypatch):
     )
 
     async def fake_user() -> User:
-        return User(id=1, username="admin", password_hash="x")
+        return User(
+            id=1,
+            username="admin",
+            password_hash="x",
+            is_admin=True,
+            is_active=True,
+        )
 
     async def fake_db() -> AsyncIterator[None]:
         yield None

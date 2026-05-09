@@ -4,7 +4,7 @@ import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_admin
 from app.db.models import Location, User
 from app.db.session import async_session_factory, get_db
 from app.schemas.location import (
@@ -46,7 +46,7 @@ async def create_location(
     body: LocationCreate,
     background_tasks: BackgroundTasks,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _user: Annotated[User, Depends(get_current_user)],
+    _admin: Annotated[User, Depends(require_admin)],
 ) -> Location:
     obj = await location_service.create_location(session, body)
     log.info("location.created", id=obj.id, name=obj.name)
@@ -99,7 +99,7 @@ async def update_location(
     location_id: int,
     body: LocationUpdate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _user: Annotated[User, Depends(get_current_user)],
+    _admin: Annotated[User, Depends(require_admin)],
 ) -> Location:
     obj = await location_service.update_location(session, location_id, body)
     if not obj:
@@ -116,7 +116,7 @@ async def update_location(
 async def delete_location(
     location_id: int,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _user: Annotated[User, Depends(get_current_user)],
+    _admin: Annotated[User, Depends(require_admin)],
 ) -> None:
     deleted = await location_service.delete_location(session, location_id)
     if not deleted:
