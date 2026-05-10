@@ -7,6 +7,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Toaster } from '@/components/ui/sonner';
 import { queryClient } from '@/lib/query-client';
+import { AcceptInvitePage } from '@/pages/AcceptInvitePage';
 import { AlertsPage } from '@/pages/AlertsPage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import { ChartsPage } from '@/pages/ChartsPage';
@@ -29,6 +30,10 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/accept-invite/:token"
+            element={<AcceptInvitePage />}
+          />
           <Route
             element={
               <ProtectedRoute>
