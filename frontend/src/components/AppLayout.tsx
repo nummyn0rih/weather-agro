@@ -11,6 +11,7 @@ import {
   Moon,
   NotebookPen,
   Settings,
+  Shield,
   Sun,
   Table2,
   X,
@@ -43,11 +44,18 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/settings', label: 'Настройки', icon: Settings },
 ];
 
+const ADMIN_NAV_ITEM: NavItem = {
+  to: '/admin',
+  label: 'Администрирование',
+  icon: Shield,
+};
+
 export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
   const username = useAuthStore((state) => state.username);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
   const clearSession = useAuthStore((state) => state.clearSession);
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
@@ -70,7 +78,7 @@ export function AppLayout() {
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-card md:flex">
-        <SidebarContent />
+        <SidebarContent isAdmin={isAdmin} />
       </aside>
 
       {isDrawerOpen && (
@@ -94,7 +102,7 @@ export function AppLayout() {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <SidebarContent showHeader={false} />
+            <SidebarContent showHeader={false} isAdmin={isAdmin} />
           </aside>
         </div>
       )}
@@ -152,9 +160,11 @@ export function AppLayout() {
 
 interface SidebarContentProps {
   showHeader?: boolean;
+  isAdmin: boolean;
 }
 
-function SidebarContent({ showHeader = true }: SidebarContentProps) {
+function SidebarContent({ showHeader = true, isAdmin }: SidebarContentProps) {
+  const items = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
   return (
     <>
       {showHeader && (
@@ -166,7 +176,7 @@ function SidebarContent({ showHeader = true }: SidebarContentProps) {
       )}
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <ul className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <li key={item.to}>
               <NavLink
                 to={item.to}

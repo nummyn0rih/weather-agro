@@ -3,6 +3,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
+import { AdminRoute } from '@/components/AdminRoute';
 import { AppLayout } from '@/components/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Toaster } from '@/components/ui/sonner';
@@ -18,6 +19,9 @@ import { LoginPage } from '@/pages/LoginPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { StubPage } from '@/pages/StubPage';
 import { TablesPage } from '@/pages/TablesPage';
+import { AdminLayout } from '@/pages/admin/AdminLayout';
+import { InvitesPage } from '@/pages/admin/InvitesPage';
+import { UsersPage } from '@/pages/admin/UsersPage';
 import { useAuthStore } from '@/stores/auth';
 
 function App() {
@@ -53,6 +57,13 @@ function App() {
               path="/settings"
               element={<StubPage title="Настройки" />}
             />
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Navigate to="users" replace />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="invites" element={<InvitesPage />} />
+              </Route>
+            </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
