@@ -807,23 +807,25 @@ admin'ом и принятия инвайта новым пользовател�
 
 ## 6.3.0-FE.4 — Admin Invites page
 
-**Статус:** ⏳ pending (после FE.3)
+**Статус:** ✅ done
 
 **Цель:** `/admin/invites` — создание и отзыв инвайтов.
 
-**Скоуп:**
+**Скоуп (фактический):**
 
-- `pages/admin/InvitesPage.tsx` под AdminRoute
-- Секция "Создать инвайт": форма (rhf+zod) — email, name (optional), is_admin (Checkbox) → `POST /admin/invites` → модалка с готовой ссылкой `${origin}/accept-invite/${token}` + "Скопировать"
-- Секция "Pending invites": таблица (email, created_by, created_at, expires_at, action "Отозвать") → `DELETE /admin/invites/{id}` (AlertDialog)
-- TanStack Query + invalidate
-- Роут в App.tsx
-- Ссылка в header/menu только если isAdmin
+- Расширена существующая `pages/admin/InvitesPage.tsx` (read-only список из FE.read-only) под AdminRoute
+- Кнопка "Создать инвайт" в шапке → двухстадийный диалог (rhf+zod):
+  - Стадия 1: email (EmailStr-валидация), is_admin (Switch) → `POST /admin/invites` (схема `InviteCreate { username, is_admin }` — backend не принимает `expires_in_days` / `name`, TTL зашит 7 дней)
+  - Стадия 2: показ ссылки `${origin}/accept-invite/${token}` (path param, не query) с кнопкой Copy и предупреждением "показывается один раз"
+- Action "Отозвать" (Trash2) в строках со status='pending' → AlertDialog → `DELETE /admin/invites/{id}` (soft revoke: row остаётся, status переходит в 'revoked')
+- TanStack Query + `invalidateQueries(['admin','invites'])`
+- Роут `/admin/invites` уже зарегистрирован в App.tsx (FE.read-only); ссылка в header — admin-only через `isAdmin`
+- Доп: Self-lockout guards в UsersPage (FE.3 тех.долг закрыт): "Снять админа" disabled когда `user.is_admin && user.id === currentUserId`; "Деактивировать" disabled для self
 
 **Acceptance:**
 
 - Создание инвайта показывает копируемую ссылку
-- Список pending обновляется после create/revoke
+- Список обновляется после create/revoke
 - Revoke с подтверждением
 
 ### 6.3.0.2 🔧 BE — Admin-эндпоинты управления пользователями

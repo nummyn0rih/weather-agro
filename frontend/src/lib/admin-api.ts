@@ -54,3 +54,31 @@ export async function listInvites(): Promise<AdminInvite[]> {
   const response = await api.get<AdminInvite[]>('/admin/invites');
   return response.data;
 }
+
+export interface InviteCreatePayload {
+  username: string;
+  is_admin: boolean;
+}
+
+export interface InviteCreatedResponse {
+  id: number;
+  token: string;
+  invite_url: string;
+  username: string;
+  is_admin: boolean;
+  expires_at: string;
+}
+
+export async function createInvite(
+  payload: InviteCreatePayload,
+): Promise<InviteCreatedResponse> {
+  const response = await api.post<InviteCreatedResponse>(
+    '/admin/invites',
+    payload,
+  );
+  return response.data;
+}
+
+export async function revokeInvite(id: number): Promise<void> {
+  await api.delete(`/admin/invites/${id}`);
+}

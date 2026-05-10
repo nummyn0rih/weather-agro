@@ -48,6 +48,7 @@ import {
   resetUserPassword,
   updateUser,
 } from '@/lib/admin-api';
+import { useAuthStore } from '@/stores/auth';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: '2-digit',
@@ -101,6 +102,7 @@ interface ResetPasswordState {
 
 export function UsersPage() {
   const queryClient = useQueryClient();
+  const currentUserId = useAuthStore((state) => state.userId);
 
   const usersQuery = useQuery({
     queryKey: ['admin', 'users'],
@@ -250,6 +252,9 @@ export function UsersPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           onSelect={() => handleToggleAdmin(user)}
+                          disabled={
+                            user.is_admin && user.id === currentUserId
+                          }
                         >
                           {user.is_admin ? 'Снять админа' : 'Сделать админом'}
                         </DropdownMenuItem>
@@ -258,6 +263,7 @@ export function UsersPage() {
                             onSelect={() =>
                               setDeactivateTarget({ user })
                             }
+                            disabled={user.id === currentUserId}
                           >
                             Деактивировать
                           </DropdownMenuItem>
