@@ -1010,7 +1010,7 @@ DoD исходного эпика покрыт совокупно DoD под-з�
   - [x] new == old → 422 (`model_validator`, detail содержит `"must differ"`)
   - [x] 401 без токена
 
-### 6.3.2 🔧 BE — Crops CRUD (admin)
+### 6.3.2 🔧 BE — Crops CRUD (admin) ✅
 
 **Описание:** Расширить `app/api/crops.py` до полноценного CRUD справочника культур.
 
@@ -1018,24 +1018,32 @@ DoD исходного эпика покрыт совокупно DoD под-з�
 
 **DoD:**
 
-- [ ] `POST /api/crops` (admin) — создать культуру
-- [ ] `PUT /api/crops/{id}` (admin) — обновить
-- [ ] `DELETE /api/crops/{id}` (admin) — см. ниже стратегию удаления
-- [ ] Pydantic v2 схемы: `CropCreate`, `CropUpdate` (поля: `name`, `base_temperature`, `optimal_temp_min`, `optimal_temp_max`)
-- [ ] Уникальность `name` (DB constraint + 409 при дубликате)
-- [ ] **Стратегия DELETE: `409 Conflict` при наличии связанных `field_events` или `location_crops`.** Обоснование:
+- [x] `POST /api/crops` (admin) — создать культуру
+- [x] `PUT /api/crops/{id}` (admin) — обновить (partial-семантика, см. ADR-004)
+- [x] `DELETE /api/crops/{id}` (admin) — см. ниже стратегию удаления
+- [x] Pydantic v2 схемы: `CropCreate`, `CropUpdate` (поля: `name`, `base_temperature`, `optimal_temp_min`, `optimal_temp_max`)
+- [x] Уникальность `name` (DB constraint + 409 при дубликате)
+- [x] **Стратегия DELETE: `409 Conflict` при наличии связанных `field_events` или `location_crops`.** Обоснование:
   - soft delete усложняет фильтры FE и сидер (что делать при reseed уже soft-deleted культуры?)
   - cascade рискует: одно случайное `DELETE` сносит исторические события урожая → потеря данных журнала
   - 409 безопасен и явен; admin сначала чистит/мигрирует связанные записи, потом удаляет
-  - response 409: `{detail: "Crop is referenced by N field_events / M location_crops", references: {field_events: N, location_crops: M}}`
-- [ ] Все мутирующие эндпоинты — `Depends(require_admin)`
-- [ ] Тесты pytest:
-  - [ ] POST happy + 409 на дубликат имени
-  - [ ] PUT happy + 404 на несуществующий + 409 на дубликат при переименовании
-  - [ ] DELETE happy (нет связанных)
-  - [ ] DELETE → 409 при наличии `field_events` (создать через фикстуру)
-  - [ ] DELETE → 409 при наличии `location_crops`
-  - [ ] не-admin → 403, неавторизованный → 401
+  - response 409 (FastAPI оборачивает в `{"detail": ...}`):
+    `{detail: {message: "Crop is referenced by N field_events / M location_crops", references: {field_events: N, location_crops: M}}}`
+- [x] Все мутирующие эндпоинты — `Depends(require_admin)`
+- [x] Тесты pytest (`backend/tests/test_admin_crops.py`, 13 кейсов):
+  - [x] POST happy + 409 на дубликат имени
+  - [x] PUT happy + 404 на несуществующий + 409 на дубликат при переименовании
+  - [x] DELETE happy (нет связанных)
+  - [x] DELETE → 409 при наличии `field_events` (создать через фикстуру)
+  - [x] DELETE → 409 при наличии `location_crops`
+  - [x] не-admin → 403, неавторизованный → 401
+
+**Реализация:**
+
+- Admin-ручки живут под `/api/crops` рядом с публичным GET, а не под `/api/admin/crops`. `require_admin` навешен пометодно (POST/PUT/DELETE), публичный GET сохранён под `get_current_user`. Решение зафиксировано в ADR-004 (`docs/DECISIONS.md`).
+- Для admin-просмотра используется существующий `GET /api/crops`; отдельные `GET /api/admin/crops` и `GET /api/admin/crops/{id}` намеренно не создавались.
+- PUT работает как partial update (`model_dump(exclude_unset=True)`) — фактически PATCH-семантика на PUT-методе. Решение зафиксировано в ADR-004.
+- Миграция не требуется: модель `Crop` уже содержит `UNIQUE` на `name` и необходимые поля (`20260428_0002_create_all_tables`).
 
 ### 6.3.0-DEBT — Технический долг по эпику ролей
 

@@ -5,6 +5,76 @@ top. Each ADR: context, decision, consequences.
 
 ---
 
+## ADR-004 — Admin CRUD for dictionaries lives under `/api/<entity>`, and PUT is partial
+
+**Status:** accepted — 2026-05-11
+**Scope:** `backend/app/api/crops.py` and future dictionary CRUDs (e.g. crop
+types, regions). Does **not** apply to resources with a dedicated admin
+namespace (`/api/admin/users`, `/api/admin/invites` from 6.3.0 stay where
+they are).
+
+### Context
+
+Task 6.3.2 (`TASKS.md` §6.3.2) added admin CRUD over the `crops` dictionary.
+Two design questions surfaced during implementation:
+
+1. **Where do admin write-methods for a dictionary live?** Option A — a
+   separate `/api/admin/<entity>` router parallel to the public
+   `/api/<entity>`. Option B — keep one router under `/api/<entity>` and
+   attach `require_admin` to the write methods only.
+2. **Are PUT semantics full-replace or partial?** The task spec uses `PUT`
+   for update; the implementation does partial via
+   `model_dump(exclude_unset=True)` (effectively PATCH-on-PUT). This pattern
+   is repeated elsewhere in the project (`admin_users.update_user`, etc.)
+   and risks being "fixed" by a later task that takes REST orthodoxy at
+   face value.
+
+### Decision
+
+**Decision A — admin write-methods sit on the public router.**
+
+For short dictionaries (Crop and similar lookups), admin POST/PUT/DELETE
+live under `/api/<entity>` next to the public GET. Authorization is
+attached per-method via `Depends(require_admin)`. No separate
+`/api/admin/<entity>` is created for dictionaries. Admin reuses the
+existing GET — no separate admin-listing endpoint.
+
+**Decision B — `PUT /api/<entity>/{id}` means partial update.**
+
+In this project, `PUT` updates only the fields supplied in the request body
+(`model_dump(exclude_unset=True)`). Full-replace is not offered as a
+separate method because there is no caller that needs it. Future tasks
+must not "correct" this to strict-REST semantics — it is intentional.
+
+### Consequences
+
+- One router per dictionary, one Swagger tag, no duplication. Admin gets
+  list/detail "for free" through the public GET.
+- The auth gate is scattered across methods, so a new write method can
+  ship without `require_admin` by oversight. This is closed by a
+  mandatory `test_<entity>_forbidden_for_regular_user` test on **every**
+  write endpoint (already enforced for crops:
+  `test_create_crop_forbidden_for_regular_user`,
+  `test_put_crop_forbidden_for_regular_user`,
+  `test_delete_crop_forbidden_for_regular_user`).
+- Diverges from strict REST (`PUT` should replace, `PATCH` should patch).
+  Acceptable trade-off: one method instead of two, clients send only what
+  they want to change, no `null` ambiguity. Documented here so future
+  tasks don't try to split into PUT+PATCH.
+- Resources with their own admin namespace (users, invites) are not
+  retro-fitted; this ADR is forward-looking guidance for dictionaries.
+
+### Alternatives considered
+
+- **Separate `/api/admin/crops` router with its own GET/POST/PUT/DELETE.**
+  Rejected: duplicates the public GET, splits the Swagger tag, and adds a
+  second place to keep in sync when the schema changes.
+- **Strict REST: `PUT` = full replace, add `PATCH` for partial.**
+  Rejected: no caller needs full-replace today; two methods means two test
+  matrices and a foot-gun where omitting a field silently wipes it.
+
+---
+
 ## ADR-003 — Password change does not invalidate existing JWTs (MVP)
 
 **Status:** accepted — 2026-05-10
