@@ -5,6 +5,78 @@ top. Each ADR: context, decision, consequences.
 
 ---
 
+## ADR-003 — Password change does not invalidate existing JWTs (MVP)
+
+**Status:** accepted — 2026-05-10
+**Scope:** `backend/app/api/auth.py` (`POST /api/auth/change-password`),
+`backend/app/core/security.py`, `backend/app/api/deps.py`
+
+### Context
+
+Task 6.3.1 (`TASKS.md` §6.3.1) introduces `POST /api/auth/change-password`.
+Refresh and access tokens are stateless JWTs signed with `SECRET_KEY` via
+`python-jose` (`backend/app/core/security.py`). There is no server-side token
+store, no revocation list, and no per-user "tokens issued before X" marker
+on the `users` table.
+
+A natural expectation around password change is that previously issued
+tokens stop working — particularly the long-lived refresh token (7 days).
+Without server-side state that is not enforceable today.
+
+### Decision
+
+For MVP, `POST /api/auth/change-password` updates only `users.password_hash`.
+Existing access and refresh tokens keep working until their natural `exp`:
+
+- access — `ACCESS_TOKEN_EXPIRE_MINUTES` (15 min by default).
+- refresh — `REFRESH_TOKEN_EXPIRE_DAYS` (7 days by default).
+
+We accept this as a known limitation, document it in the endpoint's
+docstring/OpenAPI description, and track the full fix as
+`6.3.0-DEBT.2` (`TASKS.md` §6.3.0-DEBT.2): add
+`User.tokens_invalidated_at` (or `password_changed_at`) and reject any
+token whose `iat < tokens_invalidated_at` inside `get_current_user`. Same
+column also covers admin deactivation (a deactivated user's still-valid
+access token is rejected by `is_active` check, but a refresh issued
+before deactivation could still mint new access tokens until the deactivation
+is materialized — `6.3.0-DEBT.2` closes that path too).
+
+### Consequences
+
+- A user whose password was compromised cannot self-rescue immediately:
+  attacker keeps the refresh token until it expires (≤ 7 days). Mitigation
+  options today: rotate `SECRET_KEY` (invalidates *all* sessions globally —
+  blunt instrument) or wait for `6.3.0-DEBT.2`.
+- Admin deactivation through `/api/admin/users/{id}` partially helps:
+  `get_current_user` rejects inactive users on the access path, so the
+  attacker's existing access token stops being honored on the next call.
+  The refresh token remains technically valid; on `/auth/refresh`, no
+  `is_active` check runs (refresh issues a new access token without DB
+  lookup), so a new access token can be minted — but it will be rejected
+  by `get_current_user` as inactive on the next request. Net effect:
+  attacker burns one access token per refresh until refresh expires.
+  `6.3.0-DEBT.2` removes this loophole entirely.
+- The change-password endpoint description and its docstring explicitly
+  state "existing JWT tokens remain valid until natural expiry" so callers
+  (frontend, future API consumers) cannot assume otherwise.
+- No schema migration is required for 6.3.1. The migration that adds
+  `tokens_invalidated_at` is bundled with `6.3.0-DEBT.2`.
+
+### Alternatives considered
+
+- **Add `tokens_invalidated_at` now, in 6.3.1.** Rejected: out of scope
+  for 6.3.1 (the task explicitly defers it). Mixing schema migration into
+  a logic-only ticket would also violate the layered task model in
+  `CLAUDE.md`.
+- **Rotate `SECRET_KEY` on every password change.** Rejected: would invalidate
+  every other user's session as a side effect — unacceptable once the system
+  is multi-user.
+- **Server-side refresh token store (DB or Redis).** Deferred. More invasive
+  than the `tokens_invalidated_at` approach and unnecessary for MVP scale
+  (one to a handful of users).
+
+---
+
 ## ADR-002 — Settings API: grouped endpoints, env→DB precedence, masked secrets
 
 **Status:** accepted — 2026-05-03

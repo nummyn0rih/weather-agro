@@ -987,7 +987,7 @@ DoD исходного эпика покрыт совокупно DoD под-з�
   - [ ] неавторизованный → 401
   - [ ] resolver: DB перекрывает env; при отсутствии DB-значения возвращает env
 
-### 6.3.1 🔧 BE — Смена пароля
+### 6.3.1 🔧 BE — Смена пароля ✅
 
 **Описание:** Эндпоинт смены пароля авторизованным пользователем.
 
@@ -995,20 +995,20 @@ DoD исходного эпика покрыт совокупно DoD под-з�
 
 **DoD:**
 
-- [ ] `POST /api/auth/change-password`
-- [ ] Body: `{old_password: str, new_password: str}` (Pydantic v2)
-- [ ] Валидация `new_password`: min 8 символов, не равен `old_password`
-- [ ] Проверка `verify_password(old_password, user.password_hash)` → 400 если не совпадает
-- [ ] Хеш нового через `bcrypt` (как в логине)
-- [ ] Auth: `Depends(get_current_user)`
-- [ ] Инвалидация refresh-токенов: **N/A для MVP** — JWT stateless, refresh-токены в БД не хранятся (`backend/app/core/security.py` использует `jose.jwt`). Документировать как known limitation: после смены пароля старый refresh остаётся валидным до истечения (7 дней). Полное решение — `User.password_changed_at` + проверка `iat >= password_changed_at` в `get_current_user` — отложено до отдельной задачи (создать issue, не в рамках 6.3.1)
-- [ ] Audit log: `structlog.info("auth.password_changed", user_id=...)` (без значений)
-- [ ] Тесты pytest:
-  - [ ] happy path: верный old → 204, новый пароль работает в `/login`
-  - [ ] неверный old_password → 400
-  - [ ] new_password слабый (<8) → 422
-  - [ ] new == old → 400
-  - [ ] 401 без токена
+- [x] `POST /api/auth/change-password` (204 на успех)
+- [x] Body: `{old_password: str, new_password: str}` (Pydantic v2, `ChangePasswordRequest` в `backend/app/schemas/auth.py`)
+- [x] Валидация `new_password`: `min_length=8`, `max_length=128`, `model_validator(mode="after")` запрещает равенство `old_password` → 422
+- [x] Проверка `verify_password(old_password, user.password_hash)` → 400 (`"Incorrect old password"`) если не совпадает
+- [x] Хеш нового через `hash_password` (bcrypt, `passlib.CryptContext`) — как в логине
+- [x] Auth: `Depends(get_current_user)`; без токена → 401
+- [x] Инвалидация refresh-токенов: **N/A для MVP** — JWT stateless, refresh-токены в БД не хранятся (`backend/app/core/security.py` использует `jose.jwt`). Зафиксировано как known limitation: ADR-003 в `docs/DECISIONS.md`. Полное решение делегировано задаче `6.3.0-DEBT.2` (`User.tokens_invalidated_at` + проверка `iat >= tokens_invalidated_at` в `get_current_user`)
+- [x] Audit log: `structlog.info("auth.password_changed", user_id=...)` (без значений и хешей)
+- [x] Тесты pytest (`backend/tests/test_auth_change_password.py`, 5 кейсов):
+  - [x] happy path: верный old → 204, login со старым → 401, login с новым → 200
+  - [x] неверный old_password → 400 (`"Incorrect old password"`); старый пароль не меняется
+  - [x] new_password слабый (<8) → 422; старый пароль не меняется
+  - [x] new == old → 422 (`model_validator`, detail содержит `"must differ"`)
+  - [x] 401 без токена
 
 ### 6.3.2 🔧 BE — Crops CRUD (admin)
 

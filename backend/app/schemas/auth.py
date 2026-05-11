@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class LoginRequest(BaseModel):
@@ -41,3 +41,14 @@ class UserMe(BaseModel):
     is_active: bool
     telegram_chat_id: int | None = None
     created_at: datetime
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=8, max_length=128)
+
+    @model_validator(mode="after")
+    def _new_must_differ(self) -> "ChangePasswordRequest":
+        if self.new_password == self.old_password:
+            raise ValueError("New password must differ from old password")
+        return self

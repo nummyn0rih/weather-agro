@@ -12,12 +12,14 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    hash_password,
     verify_password,
 )
 from app.db.models import User
 from app.db.session import get_db
 from app.schemas.auth import (
     AccessToken,
+    ChangePasswordRequest,
     LoginRequest,
     RefreshRequest,
     TelegramBindCodeResponse,
@@ -94,6 +96,44 @@ async def refresh(body: RefreshRequest) -> AccessToken:
     "the frontend must drop the access and refresh tokens from local storage.",
 )
 async def logout() -> None:
+    return None
+
+
+@router.post(
+    "/change-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Change password for the authenticated user",
+    description=(
+        "Verifies the supplied old password, then sets the new one. "
+        "Returns 204 on success, 400 if the old password is wrong, "
+        "422 if the new password fails validation (length or equals old). "
+        "Existing JWT tokens stay valid until natural expiry — see ADR-003."
+    ),
+    responses={
+        204: {"description": "Password changed"},
+        400: {"description": "Incorrect old password"},
+        401: {"description": "Not authenticated"},
+        422: {"description": "Invalid new password"},
+    },
+)
+async def change_password(
+    payload: ChangePasswordRequest,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> None:
+    """Change password for the authenticated user.
+
+    Note: existing JWT tokens remain valid until natural expiry.
+    Token invalidation tracked in 6.3.0-DEBT.2.
+    """
+    if not verify_password(payload.old_password, current_user.password_hash):
+        log.warning("auth.password_change_wrong_old", user_id=current_user.id)
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Incorrect old password")
+
+    current_user.password_hash = hash_password(payload.new_password)
+    session.add(current_user)
+    await session.commit()
+    log.info("auth.password_changed", user_id=current_user.id)
     return None
 
 
