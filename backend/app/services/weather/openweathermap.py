@@ -31,7 +31,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from app.core.config import get_settings
+from app.services.settings import resolver as settings_resolver
 from app.services.weather.dto import WeatherDailyDTO
 
 logger = structlog.get_logger(__name__)
@@ -54,13 +54,13 @@ class OpenWeatherMapNotConfiguredError(RuntimeError):
     """Raised when the OpenWeatherMap API key is not configured."""
 
 
-def is_configured() -> bool:
-    """Return True if the OpenWeatherMap API key is set in env."""
-    return bool(get_settings().OPENWEATHERMAP_API_KEY)
+async def is_configured() -> bool:
+    """Return True when OpenWeatherMap is reachable via env or settings DB."""
+    return bool(await settings_resolver.get_secret("openweathermap_api_key"))
 
 
-def _api_key() -> str:
-    key = get_settings().OPENWEATHERMAP_API_KEY
+async def _api_key() -> str:
+    key = await settings_resolver.get_secret("openweathermap_api_key")
     if not key:
         raise OpenWeatherMapNotConfiguredError(
             "OPENWEATHERMAP_API_KEY is not set; client disabled."
@@ -141,7 +141,7 @@ async def fetch_current(
     params: dict[str, Any] = {
         "lat": lat,
         "lon": lon,
-        "appid": _api_key(),
+        "appid": await _api_key(),
         "units": "metric",
     }
     payload = await _fetch(CURRENT_URL, params)
@@ -192,7 +192,7 @@ async def fetch_forecast(
     params: dict[str, Any] = {
         "lat": lat,
         "lon": lon,
-        "appid": _api_key(),
+        "appid": await _api_key(),
         "units": "metric",
     }
     payload = await _fetch(FORECAST_URL, params)

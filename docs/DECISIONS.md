@@ -287,6 +287,28 @@ standardize on OAuth token to avoid storing the user's account password.
   user, single role. `is_admin` boolean is enough until a real RBAC need
   surfaces.
 
+### Amendment — 2026-05-12 (implementation of task 6.3)
+
+- **Backup group keeps WebDAV `login` + `app_password`** instead of the
+  OAuth-token shape from Q5. Rationale: env parity (`.env.example` already
+  defines `YANDEX_DISK_LOGIN` + `YANDEX_DISK_APP_PASSWORD`); no Yandex.Disk
+  client code consumes these yet, so swapping schemes later is cheap.
+  Revisit when the backup uploader (task 9.x) lands or if Yandex deprecates
+  app passwords. The `login` field is stored in plaintext JSONB (not a
+  credential by itself); only `yandex_disk_app_password` is Fernet-encrypted.
+- **Sources group shape** materialised as `{priority: list[Source],
+  enabled: dict[Source, bool], average_mode: bool}`. The `enabled` map
+  complements `priority` to let the FE distinguish "configured but paused"
+  from "removed from priority list" without reordering.
+- **Resolver is async with its own short-lived session** when no session is
+  passed in — clients (`openweathermap`, `telegram_bot`, scheduler) refactor
+  to `await resolver.get_secret(...)`. Sync-cache alternative rejected: it
+  would require an explicit invalidation hook on every PUT and add a
+  process-state surface that doesn't survive multi-worker deployment.
+- **Env fallback reads `get_settings().<ATTR>`**, not `os.environ` directly
+  — keeps a single source-of-truth for env coercion (Pydantic-settings)
+  and makes test monkeypatching uniform with the rest of the codebase.
+
 ---
 
 ## ADR-001 — API URL prefix is `/api`, not `/api/v1`

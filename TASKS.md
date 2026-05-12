@@ -953,39 +953,37 @@ guards для роутов.
 
 DoD исходного эпика покрыт совокупно DoD под-задач FE.1–FE.4.
 
-### 6.3 🔧 BE — Эндпоинты настроек (4 группы)
+### 6.3 🔧 BE — Эндпоинты настроек (4 группы) ✅
 
-**Описание:** API настроек по 4 группам (sources / api-keys / telegram / backup) с шифрованием секретов и маскировкой. Дизайн зафиксирован в [`docs/DECISIONS.md` → ADR-002](docs/DECISIONS.md).
+**Описание:** API настроек по 4 группам (sources / api-keys / telegram / backup) с шифрованием секретов и маскировкой. Дизайн зафиксирован в [`docs/DECISIONS.md` → ADR-002](docs/DECISIONS.md) + amendment 2026-05-12.
 
 **Зависит от:** → 6.3.0
 
 **DoD:**
 
-- [ ] Эндпоинты (все требуют `Depends(require_admin)`):
-  - [ ] `GET /api/settings/sources`, `PUT /api/settings/sources`
-  - [ ] `GET /api/settings/api-keys`, `PUT /api/settings/api-keys`
-  - [ ] `GET /api/settings/telegram`, `PUT /api/settings/telegram`
-  - [ ] `GET /api/settings/backup`, `PUT /api/settings/backup`
-- [ ] Pydantic v2 схемы для каждой группы (отдельные input/output типы)
-- [ ] Хранение: одна строка на группу в существующей таблице `settings(key, value JSONB)`, ключи `sources | api_keys | telegram | backup`
-- [ ] Шифрование секретов: Fernet, ключ выводится из `SECRET_KEY` через HKDF (`app/core/security.py`)
-- [ ] Resolver `app/services/settings/resolver.py`: `get_secret(name)` возвращает DB → env → None (DB перекрывает env когда задано)
-- [ ] Все клиенты (`open_meteo`, `openweathermap`, `nasa_power`, `yandex_disk`, `telegram_bot`) читают секреты через resolver, не напрямую из `os.environ`
-- [ ] Маскировка в GET: секреты возвращаются как `"***" + value[-4:]`; пустые → `null`
-- [ ] PUT-семантика sentinel (см. ADR-002 Q3):
-  - поле отсутствует / `null` → не менять
-  - значение начинается с `"***"` → не менять (round-trip GET-payload идемпотентен)
-  - пустая строка `""` → удалить из БД (fallback на env)
-  - любая другая строка → зашифровать и сохранить
-- [ ] Audit log на каждый PUT: `structlog.info("settings.updated", group=..., user_id=..., changed_keys=[...])`. **Значения секретов НЕ логируются** — только имена изменённых полей
-- [ ] Тесты pytest:
-  - [ ] happy path для каждой группы (GET → PUT → GET)
-  - [ ] маскировка last4
-  - [ ] sentinel: PUT с маской → значение не меняется
-  - [ ] PUT с `""` → секрет удалён, GET даёт env-значение
-  - [ ] не-admin (`is_admin=False`) → 403
-  - [ ] неавторизованный → 401
-  - [ ] resolver: DB перекрывает env; при отсутствии DB-значения возвращает env
+- [x] Эндпоинты (все требуют `Depends(require_admin)`):
+  - [x] `GET /api/settings/sources`, `PUT /api/settings/sources`
+  - [x] `GET /api/settings/api-keys`, `PUT /api/settings/api-keys`
+  - [x] `GET /api/settings/telegram`, `PUT /api/settings/telegram`
+  - [x] `GET /api/settings/backup`, `PUT /api/settings/backup`
+- [x] Pydantic v2 схемы для каждой группы (отдельные Read/Update типы) — `backend/app/schemas/settings.py`
+- [x] Хранение: одна строка на группу в существующей таблице `settings(key, value JSONB)`, ключи `sources | api_keys | telegram | backup`. Миграция не требовалась.
+- [x] Шифрование секретов: Fernet, ключ выводится из `SECRET_KEY` через HKDF-SHA256 — `backend/app/core/encryption.py`
+- [x] Resolver `backend/app/services/settings/resolver.py`: `get_secret(name)` возвращает DB → env → None (DB перекрывает env). Env читается через `get_settings().<ATTR>` (Pydantic-settings) для тест-однородности
+- [x] Клиенты `openweathermap` (`is_configured()`, `_api_key()` → async + resolver), `telegram_bot.run()` (через `asyncio.run`), scheduler `_evaluate_alerts` читают секреты через resolver. `open_meteo`, `nasa_power` секретов не используют.
+- [x] Маскировка в GET: секреты возвращаются как `"***" + value[-4:]`; пустые → `null`
+- [x] PUT-семантика sentinel (см. ADR-002 Q3): null/absent → keep; начинается с `"***"` → keep; `""` → clear (fallback env); иначе → encrypt+save
+- [x] Audit log на каждый PUT: `structlog.info("settings.updated", group=..., user_id=..., changed_keys=[...])`. Значения секретов не логируются — только имена полей
+- [x] Тесты pytest (`backend/tests/test_settings.py`, 15 кейсов): happy GET/PUT каждой группы, маскировка last4, sentinel-mask=noop, sentinel-`""`→env, 403 non-admin (×4 параметризация), 401, resolver DB-override + env-fallback + None
+
+**Реализация:**
+
+- Yandex.Disk auth: оставлен WebDAV `login + app_password` (отход от ADR-002 Q5 OAuth-токена) — env parity с `.env.example`; client-кода ещё нет, переключаться дешёво. Поле `login` хранится в plain JSONB, шифруется только `app_password`.
+- Sources group: `{priority: list[Source], enabled: dict[Source, bool], average_mode: bool}`. `enabled` дополняет `priority`, чтобы FE отличал "выключен" от "удалён из priority" без перестановки.
+- Resolver: async с короткоживущей сессией, если session не передана. Sync-кеш отклонён — потребовал бы invalidation-hook на каждом PUT и плохо работал бы в multi-worker.
+- Env fallback использует `get_settings().<ATTR>`, не `os.environ` — единый источник env-coercion (Pydantic-settings); тесты monkeypatch'ат Settings instance.
+
+Изменения зафиксированы в DECISIONS.md amendment 2026-05-12.
 
 ### 6.3.1 🔧 BE — Смена пароля ✅
 

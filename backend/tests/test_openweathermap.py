@@ -101,9 +101,16 @@ def _disable_rate_limiter(monkeypatch) -> None:
 
 @pytest.fixture(autouse=True)
 def _set_api_key(monkeypatch) -> None:
-    """Pretend the operator configured an API key."""
-    settings = openweathermap.get_settings()
-    monkeypatch.setattr(settings, "OPENWEATHERMAP_API_KEY", "test-key-123")
+    """Pretend the operator configured an API key (resolver short-circuit)."""
+
+    async def fake_get_secret(name: str, session=None) -> str | None:
+        if name == "openweathermap_api_key":
+            return "test-key-123"
+        return None
+
+    monkeypatch.setattr(
+        openweathermap.settings_resolver, "get_secret", fake_get_secret
+    )
 
 
 def _install_mock_transport(monkeypatch, handler) -> None:
@@ -122,17 +129,24 @@ def test_calc_vpd_known_values() -> None:
     assert openweathermap._calc_vpd(20.0, None) is None
 
 
-def test_is_configured_reflects_api_key(monkeypatch) -> None:
-    settings = openweathermap.get_settings()
-    monkeypatch.setattr(settings, "OPENWEATHERMAP_API_KEY", "")
-    assert openweathermap.is_configured() is False
-    monkeypatch.setattr(settings, "OPENWEATHERMAP_API_KEY", "abc")
-    assert openweathermap.is_configured() is True
+async def test_is_configured_reflects_api_key(monkeypatch) -> None:
+    async def empty(_name: str, session=None) -> str | None:
+        return None
+
+    async def present(_name: str, session=None) -> str | None:
+        return "abc"
+
+    monkeypatch.setattr(openweathermap.settings_resolver, "get_secret", empty)
+    assert await openweathermap.is_configured() is False
+    monkeypatch.setattr(openweathermap.settings_resolver, "get_secret", present)
+    assert await openweathermap.is_configured() is True
 
 
 async def test_fetch_current_without_key_raises(monkeypatch) -> None:
-    settings = openweathermap.get_settings()
-    monkeypatch.setattr(settings, "OPENWEATHERMAP_API_KEY", "")
+    async def empty(_name: str, session=None) -> str | None:
+        return None
+
+    monkeypatch.setattr(openweathermap.settings_resolver, "get_secret", empty)
     with pytest.raises(openweathermap.OpenWeatherMapNotConfiguredError):
         await openweathermap.fetch_current(45.0, 39.0)
 

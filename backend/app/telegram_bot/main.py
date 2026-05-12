@@ -7,6 +7,7 @@ python-telegram-bot's ``Application`` to the pure handlers in
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from collections.abc import Awaitable, Callable, Sequence
 
@@ -16,9 +17,9 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.db.session import async_session_factory
+from app.services.settings import resolver as settings_resolver
 from app.telegram_bot import handlers
 
 log = structlog.get_logger(__name__)
@@ -72,12 +73,12 @@ def build_application(token: str) -> Application:
 
 def run() -> None:
     configure_logging()
-    settings = get_settings()
-    if not settings.TELEGRAM_BOT_TOKEN:
+    token = asyncio.run(settings_resolver.get_secret("telegram_bot_token"))
+    if not token:
         log.error("telegram.token_missing")
         sys.exit("TELEGRAM_BOT_TOKEN is not set")
     log.info("telegram.bot_starting")
-    app = build_application(settings.TELEGRAM_BOT_TOKEN)
+    app = build_application(token)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 

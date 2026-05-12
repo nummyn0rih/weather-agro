@@ -32,6 +32,7 @@ from app.db.session import async_session_factory
 from app.services.alerts import engine as alerts_engine
 from app.services.alerts.notifier import notify_alert
 from app.services.analytics import climate_normals as normals_service
+from app.services.settings import resolver as settings_resolver
 from app.services.weather import ingest, nasa_power, open_meteo
 
 logger = structlog.get_logger(__name__)
@@ -269,7 +270,7 @@ async def _evaluate_alerts(
     """
     settings = get_settings()
     dedup_hours = settings.ALERTS_DEDUP_HOURS
-    token = settings.TELEGRAM_BOT_TOKEN
+    token = await settings_resolver.get_secret("telegram_bot_token")
 
     if not token:
         async with session_factory() as session:
