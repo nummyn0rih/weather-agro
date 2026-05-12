@@ -117,11 +117,14 @@ weather-agro/
 
 - [`PRD.md`](PRD.md) — полная спецификация проекта
 - [`TASKS.md`](TASKS.md) — детальный план разработки
+- [`CHANGELOG.md`](CHANGELOG.md) — журнал изменений (Keep a Changelog)
 - [`CLAUDE_PROMPT.md`](CLAUDE_PROMPT.md) — шаблон промпта для Claude Code
-- [`docs/DEPLOY.md`](docs/DEPLOY.md) — инструкция по деплою (создаётся в этапе 6.7)
-- [`docs/BACKUP.md`](docs/BACKUP.md) — настройка бэкапов
-- [`docs/TELEGRAM.md`](docs/TELEGRAM.md) — настройка Telegram-бота
-- [`docs/API.md`](docs/API.md) — описание API (+ Swagger на `/api/docs`)
+- [`docs/DEPLOY.md`](docs/DEPLOY.md) — инструкция по деплою на VPS
+- [`docs/BACKUP.md`](docs/BACKUP.md) — настройка Яндекс.Диска и восстановление
+- [`docs/TELEGRAM.md`](docs/TELEGRAM.md) — Telegram-бот: BotFather, привязка, команды
+- [`docs/API.md`](docs/API.md) — обзор API + ссылка на Swagger (`/api/docs`)
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — ADR
+- [`docs/endpoint-roles.md`](docs/endpoint-roles.md) — карта auth-доступа эндпоинтов
 
 ## 🧪 Тесты
 

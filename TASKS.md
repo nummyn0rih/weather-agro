@@ -1169,16 +1169,16 @@ security choice: если у злоумышленника был токен ДО
 - [ ] Развёрнуто на VPS, открывается по домену — проверяется на VPS вручную
 - [ ] Backend и frontend работают через HTTPS — проверяется на VPS вручную
 
-### 6.7 📚 DOCS — Документация
+### 6.7 📚 DOCS — Документация ✅
 
 **DoD:**
 
-- [ ] `README.md`: описание, требования, быстрый старт (dev)
-- [ ] `docs/DEPLOY.md`: инструкция по деплою на VPS
-- [ ] `docs/BACKUP.md`: настройка Яндекс.Диска, восстановление
-- [ ] `docs/API.md`: ссылка на Swagger + основные сценарии
-- [ ] `docs/TELEGRAM.md`: создание бота, привязка
-- [ ] CHANGELOG.md
+- [x] `README.md`: описание, требования, быстрый старт (dev) — обновлён индекс документации
+- [x] `docs/DEPLOY.md`: инструкция по деплою на VPS (6.5/6.6 + актуальный раздел логов и `deploy.sh`)
+- [x] `docs/BACKUP.md`: настройка Яндекс.Диска (WebDAV), ротация, restore в работающий стенд и в чистое окружение; помечено, что job/restore-CLI ждут реализации 6.2
+- [x] `docs/API.md`: ссылка на Swagger + curl-сценарии по группам (auth, locations, weather, analytics, alerts, events, reports, settings, telegram, health) + коды ошибок и CORS
+- [x] `docs/TELEGRAM.md`: BotFather → токен → `.env`/UI → bind-code flow → команды → безопасность
+- [x] CHANGELOG.md (Keep a Changelog 1.1.0, заполнен из истории git)
 
 ---
 
