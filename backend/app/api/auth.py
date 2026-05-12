@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated
 
 import structlog
@@ -6,7 +7,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import _token_invalidated, get_current_user
 from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
@@ -79,13 +80,28 @@ async def login(
     response_model=AccessToken,
     summary="Exchange refresh token for new access token",
 )
-async def refresh(body: RefreshRequest) -> AccessToken:
+async def refresh(
+    body: RefreshRequest,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> AccessToken:
     try:
         payload = decode_token(body.refresh_token, "refresh")
     except ValueError as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, str(exc)) from exc
 
-    return AccessToken(access_token=create_access_token(payload["sub"]))
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token payload")
+
+    user = await auth_service.get_user_by_username(session, username)
+    if not user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    if not user.is_active:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User is inactive")
+    if _token_invalidated(payload, user):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token invalidated")
+
+    return AccessToken(access_token=create_access_token(user.username))
 
 
 @router.post(
@@ -107,7 +123,7 @@ async def logout() -> None:
         "Verifies the supplied old password, then sets the new one. "
         "Returns 204 on success, 400 if the old password is wrong, "
         "422 if the new password fails validation (length or equals old). "
-        "Existing JWT tokens stay valid until natural expiry — see ADR-003."
+        "All existing JWT tokens for this user are invalidated — see ADR-003."
     ),
     responses={
         204: {"description": "Password changed"},
@@ -121,18 +137,19 @@ async def change_password(
     session: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
-    """Change password for the authenticated user.
-
-    Note: existing JWT tokens remain valid until natural expiry.
-    Token invalidation tracked in 6.3.0-DEBT.2.
-    """
     if not verify_password(payload.old_password, current_user.password_hash):
         log.warning("auth.password_change_wrong_old", user_id=current_user.id)
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Incorrect old password")
 
     current_user.password_hash = hash_password(payload.new_password)
+    current_user.tokens_invalidated_at = datetime.now(timezone.utc)
     session.add(current_user)
     await session.commit()
+    log.info(
+        "auth.tokens_invalidated",
+        reason="password_change",
+        user_id=current_user.id,
+    )
     log.info("auth.password_changed", user_id=current_user.id)
     return None
 

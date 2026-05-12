@@ -8,6 +8,8 @@ Self-lockout protections enforced here, not in the route layer:
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import structlog
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
@@ -80,12 +82,16 @@ async def update_user(
             )
 
     changed: dict[str, object] = {}
+    invalidated_tokens = False
     if is_admin is not None and is_admin != target.is_admin:
         target.is_admin = is_admin
         changed["is_admin"] = is_admin
     if is_active is not None and is_active != target.is_active:
         target.is_active = is_active
         changed["is_active"] = is_active
+        if is_active is False:
+            target.tokens_invalidated_at = datetime.now(timezone.utc)
+            invalidated_tokens = True
 
     if changed:
         await session.commit()
@@ -97,6 +103,13 @@ async def update_user(
             actor=actor.username,
             **changed,
         )
+        if invalidated_tokens:
+            log.info(
+                "admin.tokens_invalidated",
+                reason="deactivated",
+                target_id=target.id,
+                actor=actor.username,
+            )
     return target
 
 

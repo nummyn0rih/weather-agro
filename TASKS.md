@@ -1057,16 +1057,18 @@ email/Telegram-рассылок инвайтов backend будет рассыл
 **Зависит от:** → 6.3.0.1
 **Блокирует:** рассылку инвайтов через email/Telegram
 
+**Статус:** ✅ выполнено 2026-05-12
+
 **DoD:**
 
-- [ ] `build_invite_url` (или его аналог в `app/services/invites.py`)
-      возвращает path-формат: `${FRONTEND_URL}/accept-invite/${token}`
+- [x] `build_invite_url` в `app/services/invites.py` возвращает path-формат:
+      `${FRONTEND_URL}/accept-invite/{token}`
 - [ ] FE `CreateInviteDialog` (стадия 2) использует
       `response.invite_url` напрямую вместо самосборки
-- [ ] Тест: `POST /api/admin/invites` возвращает `invite_url`,
-      заканчивающийся на `/accept-invite/{token}` без query-string
-- [ ] ADR (новый или дополнение к существующему) фиксирует
-      path-формат как контракт
+      *(FE-задача — вне scope этого коммита)*
+- [x] Тест `test_admin_creates_invite`: `invite_url` оканчивается на
+      `/accept-invite/{token}` и не содержит `?`
+- [x] ADR-005 в `docs/DECISIONS.md` фиксирует path-формат как контракт
 
 #### 6.3.0-DEBT.2 🔧 BE — JWT invalidation после смены пароля и деактивации
 
@@ -1078,18 +1080,29 @@ refresh-токен остаётся валидным до естественно
 **Зависит от:** → 6.3.0, 6.3.1
 **Блокирует:** прод-деплой (6.6) — security gate
 
+**Статус:** ✅ выполнено 2026-05-12
+
 **DoD:**
 
-- [ ] Колонка `User.tokens_invalidated_at TIMESTAMPTZ NULL`
-      (миграция Alembic)
-- [ ] При смене пароля и при `is_active=False` через admin —
-      `tokens_invalidated_at = now()`
-- [ ] `get_current_user` валидирует:
-      `jwt.iat >= user.tokens_invalidated_at` иначе 401
-- [ ] Тесты:
-  - [ ] смена пароля → старый refresh не работает
-  - [ ] деактивация → старый access не работает
-  - [ ] реактивация → новые токены работают
+- [x] Колонка `User.tokens_invalidated_at TIMESTAMPTZ NULL`
+      (миграция Alembic `0012_user_tokens_invalidated_at.py`)
+- [x] При смене пароля и при `is_active=False` через admin —
+      `tokens_invalidated_at = now(UTC)`
+- [x] `get_current_user` валидирует:
+      `int(iat) > int(tokens_invalidated_at.timestamp())` иначе 401
+      (`_token_invalidated` в `app/api/deps.py`). Refresh-эндпоинт делает
+      ту же проверку (закрывает loophole из ADR-003).
+- [x] Тесты в `backend/tests/test_jwt_invalidation.py`:
+  - [x] смена пароля → старый refresh не работает (401 «Token invalidated»)
+  - [x] деактивация → старый access не работает (401)
+  - [x] реактивация → новые токены работают (через `time.sleep(1.1)` —
+        iat-секунда строго после invalidated-секунды)
+
+**Решение «не сбрасывать tokens_invalidated_at при реактивации»** —
+security choice: если у злоумышленника был токен ДО deactivation, он
+должен оставаться мёртвым и после reactivation. Цена: после реактивации
+пользователь должен подождать ≥ 1 секунду перед login (в production
+это не проблема — обычно проходят минуты).
 
 #### 6.3.0-DEBT.3 ⚙️ FE-F — Code-splitting frontend бандла
 

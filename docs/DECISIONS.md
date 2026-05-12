@@ -126,7 +126,19 @@ must not "correct" this to strict-REST semantics — it is intentional.
 
 ## ADR-003 — Password change does not invalidate existing JWTs (MVP)
 
-**Status:** accepted — 2026-05-10
+**Status:** superseded by 6.3.0-DEBT.2 — 2026-05-12
+**Supersedes note:** the limitation described below was closed by
+`6.3.0-DEBT.2`. Migration `0012_user_tokens_invalidated_at.py` adds the
+`users.tokens_invalidated_at` column; `change_password` and
+`users_service.update_user` (on `is_active=False`) stamp it with
+`datetime.now(timezone.utc)`; `app/api/deps.py::_token_invalidated` rejects
+tokens whose `iat` falls in or before the invalidation second
+(`int(iat) <= int(tokens_invalidated_at.timestamp())`); `POST /auth/refresh`
+now performs the same user-state + iat check so refresh tokens issued
+before deactivation cannot mint new access tokens. See
+`backend/tests/test_jwt_invalidation.py` for the three covered scenarios.
+The historical context below is kept for reference.
+
 **Scope:** `backend/app/api/auth.py` (`POST /api/auth/change-password`),
 `backend/app/core/security.py`, `backend/app/api/deps.py`
 
