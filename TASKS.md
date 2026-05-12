@@ -1114,15 +1114,15 @@ security choice: если у злоумышленника был токен ДО
 
 **DoD:**
 
-- [ ] Все роуты страниц обёрнуты в `React.lazy` + `<Suspense>` с
+- [x] Все роуты страниц обёрнуты в `React.lazy` + `<Suspense>` с
       loading-skeleton
-- [ ] `vite.config.ts` `manualChunks`:
+- [x] `vite.config.ts` `manualChunks`:
   - recharts → отдельный чанк
   - plotly.js + react-plotly.js → отдельный чанк
   - react/react-dom/react-router → vendor-чанк
-- [ ] Главный чанк ≤ 500 KB (gzip)
-- [ ] `pnpm build` без warning'а про размер
-- [ ] Smoke: переход между всеми страницами работает, lazy-загрузка
+- [x] Главный чанк ≤ 500 KB (gzip)
+- [x] `pnpm build` без warning'а про размер
+- [x] Smoke: переход между всеми страницами работает, lazy-загрузка
       видна в Network таб'е
 
 ### 6.4 ⚙️ FE-F — Страница «Настройки»
