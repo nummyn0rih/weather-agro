@@ -20,7 +20,7 @@ const HomePage = lazy(() => import('@/pages/HomePage'));
 const LocationsPage = lazy(() => import('@/pages/LocationsPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const ReportsPage = lazy(() => import('@/pages/ReportsPage'));
-const StubPage = lazy(() => import('@/pages/StubPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const TablesPage = lazy(() => import('@/pages/TablesPage'));
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const InvitesPage = lazy(() => import('@/pages/admin/InvitesPage'));
@@ -56,10 +56,7 @@ function App() {
               <Route path="/locations" element={<LocationsPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
-              <Route
-                path="/settings"
-                element={<StubPage title="Настройки" />}
-              />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Navigate to="users" replace />} />
