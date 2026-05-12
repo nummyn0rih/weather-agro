@@ -1,0 +1,99 @@
+# Production override.
+# Запуск:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Перед первым стартом — выпустить сертификат:
+#   DOMAIN=example.com LETSENCRYPT_EMAIL=you@example.com ./scripts/init-letsencrypt.sh
+#
+# Что добавляет prod-оверлей относительно базового compose:
+# - nginx слушает 80/443, использует HTTPS-конфиг с шаблонами envsubst,
+#   перечитывает сертификаты каждые 6 часов (на случай обновления);
+# - certbot-сайдкар крутит цикл renew каждые 12 часов;
+# - том uploads пробрасывается в nginx (read-only) для прямой отдачи /uploads/;
+# - JSON-логи nginx монтируются на хост (./logs/nginx);
+# - healthchecks для frontend, telegram_bot, nginx.
+
+services:
+  backend:
+    # В проде убираем dev-bind-mount исходников — образ собран целиком.
+    volumes:
+      - uploads:/uploads
+    environment:
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+
+  frontend:
+    # В проде frontend = nginx со статикой (см. frontend/Dockerfile target=runtime).
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  telegram_bot:
+    environment:
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+    healthcheck:
+      # Бот не имеет HTTP-эндпоинта — проверяем что Python-процесс жив.
+      test: ["CMD-SHELL", "pgrep -f 'app.telegram_bot.main' >/dev/null || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    # Полный override монтирования: вместо одиночного nginx.conf используем
+    # nginx.prod.conf + шаблоны server-блоков (envsubst по ${DOMAIN}).
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+      - uploads:/uploads:ro
+      - ./logs/nginx:/var/log/nginx
+    environment:
+      DOMAIN: ${DOMAIN}
+      # envsubst по умолчанию подставляет ВСЕ env-переменные.
+      # Ограничиваем allowlist'ом, чтобы не сломать nginx-директивы ($host и т.п.).
+      NGINX_ENVSUBST_TEMPLATE_SUFFIX: ".template"
+      NGINX_ENVSUBST_OUTPUT_DIR: "/etc/nginx/conf.d"
+      NGINX_ENVSUBST_FILTER: "^DOMAIN$$"
+    # Перезагружаем nginx раз в 6ч — подхватывает обновлённые сертификаты certbot.
+    command: >
+      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec /docker-entrypoint.sh nginx -g 'daemon off;'"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+
+  # ---- Certbot — автообновление сертификатов Let's Encrypt ----
+  certbot:
+    image: certbot/certbot:latest
+    container_name: weather-certbot
+    restart: unless-stopped
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    # Каждые 12ч пытается обновить (Let's Encrypt рекомендует ~раз в сутки).
+    # При успехе обновлённые файлы появятся в volume letsencrypt, nginx
+    # подхватит их при следующем reload (см. цикл выше).
+    entrypoint: >
+      /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot --webroot-path=/var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+    depends_on:
+      - nginx
+
+volumes:
+  letsencrypt:
+  certbot_www:

@@ -1146,17 +1146,17 @@ security choice: если у злоумышленника был токен ДО
 - Все формы используют TanStack Query (`useQuery` / `useMutation`); состояния loading / error / empty / success обработаны
 - Бэкап-секция (ручной запуск + список) заглушена до выполнения задачи 6.2
 
-### 6.5 🚀 INFRA — Nginx + HTTPS
+### 6.5 🚀 INFRA — Nginx + HTTPS ✅
 
 **DoD:**
 
-- [ ] `nginx/nginx.conf` — reverse proxy на backend (`/api`) и frontend (`/`)
-- [ ] Раздача `/uploads/` напрямую через nginx
-- [ ] Gzip, кэширование статики
-- [ ] Сертификат Let's Encrypt (certbot в отдельном контейнере)
-- [ ] Автообновление сертификата (cron)
-- [ ] HTTP → HTTPS редирект
-- [ ] Тест: SSL Labs grade A
+- [x] `nginx/nginx.conf` — reverse proxy на backend (`/api`) и frontend (`/`)
+- [x] Раздача `/uploads/` напрямую через nginx
+- [x] Gzip, кэширование статики
+- [x] Сертификат Let's Encrypt (certbot в отдельном контейнере)
+- [x] Автообновление сертификата (cron)
+- [x] HTTP → HTTPS редирект
+- [ ] Тест: SSL Labs grade A — проверить после деплоя на VPS
 
 ### 6.6 🚀 INFRA — Production deploy
 

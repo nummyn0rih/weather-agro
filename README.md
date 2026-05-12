@@ -55,7 +55,7 @@ docker compose exec backend python -m app.scripts.seed
 
 ## 🌐 Production deploy
 
-См. [`docs/DEPLOY.md`](docs/DEPLOY.md) — подробная инструкция по развёртыванию на VPS с HTTPS.
+См. [`docs/DEPLOY.md`](docs/DEPLOY.md) — подробная инструкция по развёртыванию на VPS с HTTPS (Let's Encrypt).
 
 Краткая версия:
 ```bash
@@ -63,10 +63,19 @@ docker compose exec backend python -m app.scripts.seed
 git clone https://github.com/yourname/weather-agro.git
 cd weather-agro
 cp .env.example .env
-nano .env  # заполнить production-значения
-docker compose -f docker-compose.prod.yml up -d
-docker compose exec backend alembic upgrade head
+nano .env  # заполнить production: DOMAIN, LETSENCRYPT_EMAIL, SECRET_KEY и т.д.
+
+# Первый запуск — выпустить SSL-сертификат
+DOMAIN=your-domain.com LETSENCRYPT_EMAIL=you@example.com \
+  ./scripts/init-letsencrypt.sh
+
+# Поднять весь стек
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend \
+  alembic upgrade head
 ```
+
+Сертификат обновляется автоматически (`certbot renew` каждые 12ч). HTTP → HTTPS редирект, HSTS, JSON-логи nginx на `./logs/nginx/`.
 
 ## 📁 Структура проекта
 
