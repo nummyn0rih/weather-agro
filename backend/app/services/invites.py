@@ -165,4 +165,4 @@ async def accept_invite(
 
 def build_invite_url(frontend_url: str, token: str) -> str:
     base = frontend_url.rstrip("/")
-    return f"{base}/accept-invite?token={token}"
+    return f"{base}/accept-invite/{token}"

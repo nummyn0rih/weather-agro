@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # ── Frontend ──────────────────────────────────────────
     # Used to build invite URLs (POST /api/admin/invites returns
-    # `${FRONTEND_URL}/accept-invite?token=...`).
+    # `${FRONTEND_URL}/accept-invite/{token}` — see ADR-005).
     FRONTEND_URL: str = "http://localhost:5173"
 
     # ── Environment ───────────────────────────────────────

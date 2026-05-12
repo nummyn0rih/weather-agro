@@ -5,6 +5,55 @@ top. Each ADR: context, decision, consequences.
 
 ---
 
+## ADR-005 — Invite URL contract is path-form `/accept-invite/{token}`
+
+**Status:** accepted — 2026-05-12
+**Scope:** `backend/app/services/invites.py::build_invite_url`,
+`frontend/src/pages/AcceptInvitePage.tsx`,
+`frontend/src/components/admin/CreateInviteDialog.tsx`.
+
+### Context
+
+Task 6.3.0.1 (`TASKS.md` §6.3.0.1) added the invite system. Stage 2 of the
+frontend (`6.3.0-FE.2`) registered the accept-invite page under the path
+route `/accept-invite/:token`, while the backend `build_invite_url`
+initially returned the query-form `${FRONTEND_URL}/accept-invite?token=...`.
+The discrepancy was masked because the admin UI assembled the invite link
+client-side from `token` and ignored the server-supplied `invite_url`.
+
+As soon as out-of-band delivery (email, Telegram) ships in 6.4, the server
+will start sending links that the SPA cannot parse — the route would 404.
+
+### Decision
+
+`build_invite_url` returns the path-form
+`${FRONTEND_URL}/accept-invite/{token}`. The frontend route
+`/accept-invite/:token` is the canonical contract for invite links.
+
+The admin UI must use `response.invite_url` verbatim from
+`POST /api/admin/invites` instead of self-assembling the URL.
+
+### Consequences
+
+- One URL shape end-to-end. Email/Telegram delivery in 6.4 can send the
+  server-built link without further work.
+- Existing path route in `AcceptInvitePage` is the source of truth; future
+  link generators (server-side or template-side) must call
+  `build_invite_url` rather than concatenating strings.
+- The query-form is not silently accepted as a fallback — if a legacy
+  link surfaces, the SPA 404s on `/accept-invite` (no `:token`), which
+  surfaces the bug rather than hiding it.
+
+### Alternatives considered
+
+- **Keep query-form, change the FE route.** Rejected: the path-form is
+  already shipped in the FE and used by the admin UI; reverting it would
+  invalidate any links already created.
+- **Accept both shapes.** Rejected: two contracts is worse than one. We
+  control both ends, so a single shape is achievable.
+
+---
+
 ## ADR-004 — Admin CRUD for dictionaries lives under `/api/<entity>`, and PUT is partial
 
 **Status:** accepted — 2026-05-11

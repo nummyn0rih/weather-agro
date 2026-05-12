@@ -113,7 +113,8 @@ def test_admin_creates_invite(client_factory, admin_user) -> None:
     assert response.status_code == 201, response.text
     body = response.json()
     assert body["token"]
-    assert body["invite_url"].endswith(f"/accept-invite?token={body['token']}")
+    assert body["invite_url"].endswith(f"/accept-invite/{body['token']}")
+    assert "?" not in body["invite_url"]
     assert body["username"] == "alice@example.com"
     assert body["is_admin"] is False
     assert body["expires_at"]
