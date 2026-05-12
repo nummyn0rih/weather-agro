@@ -578,18 +578,18 @@
 - [x] Активация только если в `.env` указан `OPENWEATHERMAP_API_KEY`
 - [x] Тест с замоканным httpx
 
-### 6.1.1 🔧 BE — Fix: TZ-aware агрегация в OpenWeatherMap forecast
+### 6.1.1 🔧 BE — Fix: TZ-aware агрегация в OpenWeatherMap forecast ✅
 
 Зависит от: → 6.1
 Блокирует: интеграцию OWM как источника alerts engine
 
 DoD:
 
-- [ ] `fetch_forecast` группирует 3h-бакеты по локальной TZ локации
-- [ ] TZ берётся из `Location.timezone` (новое поле, nullable, default UTC) ИЛИ вычисляется через `timezonefinder` из (lat, lon)
-- [ ] Решение зафиксировано в ADR (новый или дополнение к существующему)
-- [ ] Тест: для локации UTC+3 заморозок в 02:00 локального попадает в правильный день
-- [ ] `fetch_current.d` тоже использует локальную TZ (или явно документировано почему UTC ок для current)
+- [x] `fetch_forecast` группирует 3h-бакеты по локальной TZ локации
+- [x] TZ берётся из `Location.timezone` (новое поле, NOT NULL, default `'UTC'`)
+- [x] Решение зафиксировано в ADR-006 (`docs/DECISIONS.md`)
+- [x] Тест: для локации UTC+3 заморозок в 02:00 локального попадает в правильный день
+- [x] `fetch_current` тоже использует локальную TZ (симметрично с forecast)
 
 ### 6.2 🔧 BE — Бэкапы на Яндекс.Диск
 

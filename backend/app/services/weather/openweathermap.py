@@ -11,6 +11,11 @@ callers never exceed the quota.
 Activation: the client is enabled only when `OPENWEATHERMAP_API_KEY` is set in
 the environment. `is_configured()` exposes that check; calling `fetch_*` with
 no key raises `OpenWeatherMapNotConfigured`.
+
+Daily aggregation is performed in the caller-supplied IANA timezone (see
+ADR-006). Pass `Location.timezone` to `fetch_forecast` / `fetch_current` so
+3-hour buckets bin into the correct local calendar day; otherwise UTC is
+used.
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ import time
 from collections import defaultdict
 from datetime import UTC, date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
 import structlog
@@ -126,17 +132,31 @@ def _frost_entries(temps: list[float | None]) -> int:
     return sum(1 for t in temps if t is not None and t < 0)
 
 
+def _resolve_tz(timezone: str) -> ZoneInfo:
+    """Return a `ZoneInfo` for `timezone`, falling back to UTC on bad input."""
+    try:
+        return ZoneInfo(timezone)
+    except ZoneInfoNotFoundError:
+        logger.warning(
+            "openweathermap_unknown_timezone", timezone=timezone, fallback="UTC"
+        )
+        return ZoneInfo("UTC")
+
+
 async def fetch_current(
     lat: float,
     lon: float,
     *,
     location_id: int | None = None,
+    timezone: str = "UTC",
 ) -> WeatherDailyDTO:
     """Fetch current-weather snapshot at (lat, lon).
 
-    Returns a single `WeatherDailyDTO` stamped with the snapshot's UTC date.
-    Daily-aggregate fields not present in a single snapshot (et0,
-    sunshine_hours, frost_hours, soil_*) are left as `None`.
+    The snapshot timestamp is converted into `timezone` (an IANA name, e.g.
+    `Europe/Moscow`) before `.date()` is taken — so a 23:00 UTC reading at
+    a UTC+3 location is stamped as the *next* local day. Pass the
+    `Location.timezone` value here; defaults to UTC for code paths without
+    a configured location.
     """
     params: dict[str, Any] = {
         "lat": lat,
@@ -151,8 +171,13 @@ async def fetch_current(
     rain = payload.get("rain") or {}
     snow = payload.get("snow") or {}
 
+    tz = _resolve_tz(timezone)
     ts = payload.get("dt")
-    d = datetime.fromtimestamp(ts, tz=UTC).date() if ts else date.today()
+    d = (
+        datetime.fromtimestamp(ts, tz=UTC).astimezone(tz).date()
+        if ts
+        else date.today()
+    )
 
     temp = main.get("temp")
     humidity = main.get("humidity")
@@ -178,6 +203,7 @@ async def fetch_current(
         lat=lat,
         lon=lon,
         date=d.isoformat(),
+        timezone=str(tz),
     )
     return dto
 
@@ -187,8 +213,19 @@ async def fetch_forecast(
     lon: float,
     *,
     location_id: int | None = None,
+    timezone: str = "UTC",
 ) -> list[WeatherDailyDTO]:
-    """Fetch 5-day / 3-hour forecast and aggregate to daily DTOs."""
+    """Fetch 5-day / 3-hour forecast and aggregate to daily DTOs.
+
+    Each 3-hour bucket is binned by its **local date** in `timezone` (IANA
+    name, e.g. `Europe/Moscow`). This matters for alerts: a frost reading
+    at 02:00 local in a UTC+3 zone is 23:00 UTC of the previous day —
+    binning by UTC would file it under the wrong calendar day and the
+    alert engine would miss it. See ADR-006.
+
+    `timezone` defaults to `"UTC"` so callers without a configured
+    `Location.timezone` still get well-defined behaviour.
+    """
     params: dict[str, Any] = {
         "lat": lat,
         "lon": lon,
@@ -198,12 +235,13 @@ async def fetch_forecast(
     payload = await _fetch(FORECAST_URL, params)
     items: list[dict[str, Any]] = payload.get("list") or []
 
+    tz = _resolve_tz(timezone)
     by_day: dict[date, list[dict[str, Any]]] = defaultdict(list)
     for item in items:
         ts = item.get("dt")
         if ts is None:
             continue
-        d = datetime.fromtimestamp(ts, tz=UTC).date()
+        d = datetime.fromtimestamp(ts, tz=UTC).astimezone(tz).date()
         by_day[d].append(item)
 
     out: list[WeatherDailyDTO] = []
@@ -248,5 +286,6 @@ async def fetch_forecast(
         lat=lat,
         lon=lon,
         days=len(out),
+        timezone=str(tz),
     )
     return out

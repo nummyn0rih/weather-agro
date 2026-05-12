@@ -28,6 +28,7 @@ def _make_loc(
         region=region,
         type=type_,
         note=None,
+        timezone="UTC",
         created_at=_NOW,
         import_status="pending",
         import_progress=0,

@@ -1,9 +1,18 @@
 from datetime import datetime
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 LocationType = Literal["own", "purchase"]
+
+
+def _validate_iana_tz(value: str) -> str:
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(f"Unknown IANA timezone: {value!r}") from exc
+    return value
 
 
 class LocationBase(BaseModel):
@@ -13,6 +22,17 @@ class LocationBase(BaseModel):
     region: str | None = Field(None, max_length=100)
     type: LocationType
     note: str | None = None
+    timezone: str = Field(
+        "UTC",
+        max_length=64,
+        description="IANA timezone (e.g. 'Europe/Moscow'). Used for TZ-aware "
+        "daily aggregation. Defaults to 'UTC'.",
+    )
+
+    @field_validator("timezone")
+    @classmethod
+    def _check_timezone(cls, v: str) -> str:
+        return _validate_iana_tz(v)
 
 
 class LocationCreate(LocationBase):
@@ -28,6 +48,14 @@ class LocationUpdate(BaseModel):
     region: str | None = Field(None, max_length=100)
     type: LocationType | None = None
     note: str | None = None
+    timezone: str | None = Field(None, max_length=64)
+
+    @field_validator("timezone")
+    @classmethod
+    def _check_timezone(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return _validate_iana_tz(v)
 
 
 class LocationResponse(LocationBase):

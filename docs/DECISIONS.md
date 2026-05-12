@@ -5,6 +5,74 @@ top. Each ADR: context, decision, consequences.
 
 ---
 
+## ADR-006 — OpenWeatherMap forecast aggregates by location-local TZ
+
+**Status:** accepted — 2026-05-12
+**Scope:** `backend/app/services/weather/openweathermap.py`,
+`backend/app/db/models/location.py::Location.timezone`,
+`backend/app/schemas/location.py`.
+
+### Context
+
+Task 6.1.1 (`TASKS.md` §6.1.1). The free-tier endpoint
+`/data/2.5/forecast` returns 3-hour buckets stamped with a UTC `dt`. The
+initial `fetch_forecast` implementation (6.1) binned those buckets by
+`datetime.fromtimestamp(dt, tz=UTC).date()` — i.e. the UTC calendar day.
+
+For locations east of the meridian this misfiles edge-of-day readings.
+Example: Krasnodar is UTC+3 year-round; a forecast bucket at 23:00 UTC
+on 2026-04-01 represents 02:00 local on 2026-04-02. A freezing reading
+in that bucket would land in the 2026-04-01 row, while the operator
+expects "frost on the morning of April 2". Once the alerts engine starts
+consuming OWM forecasts (the explicit blocker named in the task), this
+silently produces wrong alert dates.
+
+### Decision
+
+1. Add `Location.timezone: str` (nullable=False, `server_default='UTC'`,
+   `String(64)` for an IANA name like `Europe/Moscow`). Migration `0013`.
+2. `fetch_forecast(..., timezone: str = "UTC")` converts each bucket's
+   UTC timestamp into the location TZ via `zoneinfo.ZoneInfo` *before*
+   taking `.date()`, then bins by the resulting local date.
+3. `fetch_current(..., timezone: str = "UTC")` does the same, for
+   symmetry — a single snapshot at 23:00 UTC must file under the local
+   day, not UTC, for the same reason as forecast buckets.
+4. Unknown / malformed TZ names fall back to UTC with a warning log; we
+   do not refuse the request.
+
+The TZ travels as a parameter rather than being looked up inside the
+client because the client must remain stateless (it does not own a DB
+session). Schedulers and ingest code read `Location.timezone` and pass
+it in.
+
+### Consequences
+
+- Stored data (`weather_forecast.time`) now reflects the
+  operator-meaningful calendar day. Alert rules that join on `time` line
+  up with the user's mental model.
+- Existing rows (none in this codebase — OWM is not yet wired into the
+  scheduler) are not migrated; the column has a default of `'UTC'` so
+  pre-existing locations behave exactly as before until their TZ is set
+  by an admin via `PUT /api/locations/{id}`.
+- TZ is a required-but-defaulted field at the API surface; clients can
+  omit it and get UTC. `LocationCreate.timezone` is validated against
+  `zoneinfo` at request time to surface typos early.
+
+### Alternatives considered
+
+- **Resolve TZ via `timezonefinder` from (lat, lon).** Rejected for now
+  — adds a 50 MB+ data dep for a single lookup, and TZ rarely changes
+  per location. The column-only approach keeps things lean; a follow-up
+  task may add auto-resolve on `POST /api/locations` if manual entry
+  proves painful.
+- **Always use UTC; let the alert engine shift.** Rejected — pushes the
+  TZ concern into every downstream consumer (alerts, charts, exports),
+  multiplying the surface area. Fix once, at the ingest boundary.
+- **Use `Location.region` to infer TZ.** Rejected — `region` is a free
+  string, not an IANA name; the two concepts should not be conflated.
+
+---
+
 ## ADR-005 — Invite URL contract is path-form `/accept-invite/{token}`
 
 **Status:** accepted — 2026-05-12

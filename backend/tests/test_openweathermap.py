@@ -221,6 +221,127 @@ async def test_fetch_forecast_aggregates_daily(monkeypatch) -> None:
     assert d2.wind_speed_max == 2.0  # no gust -> falls back to wind speed
 
 
+async def test_fetch_forecast_bins_by_local_tz(monkeypatch) -> None:
+    """UTC+3 frost at 02:00 local must land on its local calendar day.
+
+    23:00 UTC on 2026-04-01 is 02:00 Europe/Moscow on 2026-04-02. With
+    naive UTC binning the freezing reading filed under Apr 1; ADR-006
+    requires it to file under Apr 2 so the alerts engine flags "frost
+    on the morning of April 2".
+    """
+    frost_at_02_local = datetime(2026, 4, 1, 23, 0, tzinfo=UTC)  # 02:00 MSK Apr 2
+    warm_midday = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)  # 12:00 MSK Apr 2
+
+    payload = {
+        "list": [
+            _make_forecast_entry(
+                frost_at_02_local,
+                temp=-3.0,
+                temp_min=-4.0,
+                temp_max=-2.0,
+                humidity=85,
+                wind_speed=2.0,
+            ),
+            _make_forecast_entry(
+                warm_midday,
+                temp=10.0,
+                temp_min=8.0,
+                temp_max=12.0,
+                humidity=60,
+                wind_speed=3.0,
+            ),
+        ],
+        "city": {"coord": {"lat": 45.0, "lon": 39.0}},
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    _install_mock_transport(monkeypatch, handler)
+
+    out = await openweathermap.fetch_forecast(
+        45.0, 39.0, location_id=7, timezone="Europe/Moscow"
+    )
+
+    assert len(out) == 1, "both buckets fall on the same local day"
+    day = out[0]
+    assert day.time == date(2026, 4, 2)
+    assert day.frost_hours == 3  # one 3h bucket below zero
+    assert day.temp_min == -4.0
+
+
+async def test_fetch_forecast_utc_default_keeps_legacy_binning(monkeypatch) -> None:
+    """Without a `timezone` arg, behaviour matches pre-ADR-006 (UTC)."""
+    frost_at_02_local = datetime(2026, 4, 1, 23, 0, tzinfo=UTC)
+    warm_midday = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+    payload = {
+        "list": [
+            _make_forecast_entry(
+                frost_at_02_local,
+                temp=-3.0,
+                temp_min=-4.0,
+                temp_max=-2.0,
+                humidity=85,
+                wind_speed=2.0,
+            ),
+            _make_forecast_entry(
+                warm_midday,
+                temp=10.0,
+                temp_min=8.0,
+                temp_max=12.0,
+                humidity=60,
+                wind_speed=3.0,
+            ),
+        ],
+        "city": {"coord": {"lat": 45.0, "lon": 39.0}},
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    _install_mock_transport(monkeypatch, handler)
+    out = await openweathermap.fetch_forecast(45.0, 39.0)
+    # UTC binning splits the two buckets across two calendar days.
+    assert {d.time for d in out} == {date(2026, 4, 1), date(2026, 4, 2)}
+
+
+async def test_fetch_current_uses_local_tz_for_date(monkeypatch) -> None:
+    """23:00 UTC snapshot in UTC+3 stamps the *next* local day."""
+    payload = {
+        **_CURRENT_PAYLOAD,
+        "dt": int(datetime(2026, 4, 1, 23, 0, tzinfo=UTC).timestamp()),
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    _install_mock_transport(monkeypatch, handler)
+
+    dto = await openweathermap.fetch_current(
+        45.0, 39.0, timezone="Europe/Moscow"
+    )
+    assert dto.time == date(2026, 4, 2)
+
+
+async def test_unknown_timezone_falls_back_to_utc(monkeypatch) -> None:
+    """Bad TZ names log a warning and bin by UTC instead of crashing."""
+    warnings: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        openweathermap.logger,
+        "warning",
+        lambda event, **kw: warnings.append((event, kw)),
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=_FORECAST_PAYLOAD)
+
+    _install_mock_transport(monkeypatch, handler)
+
+    out = await openweathermap.fetch_forecast(45.0, 39.0, timezone="Mars/Olympus_Mons")
+    assert out  # did not crash
+    assert any(e[0] == "openweathermap_unknown_timezone" for e in warnings)
+
+
 async def test_fetch_current_redacts_api_key_in_logs(monkeypatch) -> None:
     """The API key must never reach the structlog event stream."""
     captured_log: dict = {}

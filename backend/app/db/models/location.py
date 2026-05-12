@@ -18,6 +18,11 @@ class Location(Base):
     region: Mapped[str | None] = mapped_column(String(100))
     type: Mapped[str] = mapped_column(String(20), nullable=False)
     note: Mapped[str | None] = mapped_column(Text)
+    # IANA timezone name (e.g. "Europe/Moscow"). Used for TZ-aware daily
+    # aggregation of forecast/current readings — see ADR-006.
+    timezone: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="UTC", server_default="UTC"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
