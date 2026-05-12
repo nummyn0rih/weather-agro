@@ -17,6 +17,7 @@ from app.api.alerts import router as alerts_router
 from app.api.analytics import router as analytics_router
 from app.api.auth import limiter as auth_limiter
 from app.api.auth import router as auth_router
+from app.api.backup import router as backup_router
 from app.api.crops import router as crops_router
 from app.api.events import router as events_router
 from app.api.health import router as health_router
@@ -85,6 +86,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_invites_router, prefix="/api")
     app.include_router(admin_users_router, prefix="/api")
     app.include_router(settings_router, prefix="/api")
+    app.include_router(backup_router, prefix="/api")
 
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     app.mount(

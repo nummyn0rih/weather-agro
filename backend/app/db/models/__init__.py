@@ -1,4 +1,5 @@
 from app.db.models.alert import AlertHistory, AlertRule
+from app.db.models.backup_log import BackupLog
 from app.db.models.climate_normal import ClimateNormal
 from app.db.models.crop import Crop
 from app.db.models.field_event import FieldEvent
@@ -13,6 +14,7 @@ from app.db.models.weather import WeatherDaily, WeatherForecast
 __all__ = [
     "AlertHistory",
     "AlertRule",
+    "BackupLog",
     "ClimateNormal",
     "Crop",
     "FieldEvent",

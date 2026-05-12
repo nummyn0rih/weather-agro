@@ -17,10 +17,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.scheduler.jobs import (
+    BACKUP_JOB_ID,
     CLIMATE_NORMALS_JOB_ID,
     DAILY_INGEST_JOB_ID,
     EVALUATE_ALERTS_JOB_ID,
     FORECAST_REFRESH_JOB_ID,
+    backup_job,
     climate_normals_job,
     daily_ingest_job,
     evaluate_alerts_job,
@@ -66,6 +68,14 @@ def register_jobs(scheduler: AsyncIOScheduler) -> None:
         coalesce=True,
         misfire_grace_time=600,
     )
+    scheduler.add_job(
+        backup_job,
+        trigger=CronTrigger(hour=4, minute=0, timezone=SCHEDULER_TZ),
+        id=BACKUP_JOB_ID,
+        replace_existing=True,
+        coalesce=True,
+        misfire_grace_time=3600,
+    )
     logger.info(
         "scheduler.jobs_registered",
         jobs=[
@@ -73,6 +83,7 @@ def register_jobs(scheduler: AsyncIOScheduler) -> None:
             FORECAST_REFRESH_JOB_ID,
             CLIMATE_NORMALS_JOB_ID,
             EVALUATE_ALERTS_JOB_ID,
+            BACKUP_JOB_ID,
         ],
         timezone=SCHEDULER_TZ,
     )

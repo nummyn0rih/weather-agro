@@ -32,6 +32,7 @@ from app.db.session import async_session_factory
 from app.services.alerts import engine as alerts_engine
 from app.services.alerts.notifier import notify_alert
 from app.services.analytics import climate_normals as normals_service
+from app.services.backup import runner as backup_runner
 from app.services.settings import resolver as settings_resolver
 from app.services.weather import ingest, nasa_power, open_meteo
 
@@ -41,6 +42,7 @@ DAILY_INGEST_JOB_ID = "daily_ingest"
 FORECAST_REFRESH_JOB_ID = "forecast_refresh"
 CLIMATE_NORMALS_JOB_ID = "climate_normals_recompute"
 EVALUATE_ALERTS_JOB_ID = "evaluate_alerts"
+BACKUP_JOB_ID = "backup_to_yandex_disk"
 
 
 async def _list_locations(session: AsyncSession) -> list[Location]:
@@ -298,5 +300,34 @@ async def evaluate_alerts_job(
     await _run_with_log(
         EVALUATE_ALERTS_JOB_ID,
         _evaluate_alerts,
+        session_factory=session_factory,
+    )
+
+
+async def _run_backup(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> int:
+    """Execute one scheduled backup. Returns 1 on success, 0 on error.
+
+    Persistence of ``BackupLog`` is handled inside
+    :func:`app.services.backup.runner.run_backup`; the ``SchedulerLog`` row
+    written by ``_run_with_log`` is the cross-job audit trail.
+    """
+    result = await backup_runner.run_backup(
+        kind="scheduled", session_factory=session_factory
+    )
+    if result.status != "success":
+        # Propagate so the SchedulerLog row records 'error'.
+        raise RuntimeError(result.error or "backup failed")
+    return 1
+
+
+async def backup_job(
+    session_factory: async_sessionmaker[AsyncSession] | None = None,
+) -> None:
+    """Entry point for the 04:00 MSK Yandex.Disk backup job (task 6.2)."""
+    await _run_with_log(
+        BACKUP_JOB_ID,
+        _run_backup,
         session_factory=session_factory,
     )

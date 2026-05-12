@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libffi-dev \
         shared-mime-info \
         fonts-dejavu-core \
+        postgresql-client \
+        gzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Deps first for layer caching.
