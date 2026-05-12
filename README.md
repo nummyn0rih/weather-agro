@@ -75,7 +75,13 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend \
   alembic upgrade head
 ```
 
-Сертификат обновляется автоматически (`certbot renew` каждые 12ч). HTTP → HTTPS редирект, HSTS, JSON-логи nginx на `./logs/nginx/`.
+Сертификат обновляется автоматически (`certbot renew` каждые 12ч). HTTP → HTTPS редирект, HSTS, JSON-логи nginx на `./logs/nginx/`, JSON-логи остальных сервисов — через docker `json-file` driver с ротацией (10MB × 5).
+
+Обновление приложения:
+```bash
+./scripts/deploy.sh             # main
+./scripts/deploy.sh release/v1  # ветка/тег
+```
 
 ## 📁 Структура проекта
 

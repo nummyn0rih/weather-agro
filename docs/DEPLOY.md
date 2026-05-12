@@ -14,6 +14,14 @@ Backend-образ нужно пересобрать после этого ко�
 `nginx/templates/default.conf.template`, `scripts/init-letsencrypt.sh`.
 Первый запуск в проде — следовать разделам ниже.
 
+### 6.6 deploy note
+В prod-compose добавлен docker logging driver `json-file` (ротация 10MB × 5)
+для всех сервисов. Healthchecks теперь покрывают `db`, `backend`, `frontend`,
+`telegram_bot`, `nginx`. Появился `scripts/deploy.sh` для безопасного апдейта
+(`./scripts/deploy.sh [branch]`). Каталог `./logs/` (`logs/nginx/` пишет
+сам nginx как bind-mount; логи остальных сервисов — через docker json-file
+driver, см. раздел 10 ниже) должен существовать перед стартом стека.
+
 ---
 
 ## 1. Требования
@@ -143,28 +151,63 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec nginx nginx
 
 ## 10. Логи
 
-JSON-логи nginx — на хосте в `./logs/nginx/`:
+**Nginx** — bind-mount, JSON access-лог + текстовый error-лог на хосте:
 ```bash
 tail -f logs/nginx/access.log | jq .
 tail -f logs/nginx/error.log
 ```
 
-Логи остальных сервисов:
+**Backend / Telegram / DB / Frontend / Certbot** — stdout JSON
+(structlog), перехватывается Docker `json-file` driver с ротацией
+**10MB × 5 файлов** на сервис. Хранятся на хосте в
+`/var/lib/docker/containers/<container-id>/<id>-json.log`.
+
+Удобный просмотр через docker:
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f backend
-docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f telegram_bot
+# tail последних 200 строк, follow
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=200 -f backend
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=200 -f telegram_bot
+
+# фильтр по уровню
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend \
+  | jq -c 'select(.level=="error" or .level=="warning")'
+```
+
+Прямой путь к JSON-файлу на хосте (если нужно скормить fluent-bit/Loki):
+```bash
+docker inspect --format='{{.LogPath}}' weather-backend
+# /var/lib/docker/containers/<id>/<id>-json.log
 ```
 
 ## 11. Обновление приложения
 
+Штатный путь — `scripts/deploy.sh`:
+
+```bash
+# main:
+./scripts/deploy.sh
+
+# другая ветка/тег:
+./scripts/deploy.sh release/v1.2
+```
+
+Что делает:
+1. Проверяет, что рабочее дерево чистое (нет незакоммиченного локального
+   изменения) и `.env` существует.
+2. `git fetch` + fast-forward до `origin/<branch>`.
+3. `docker compose pull` для внешних образов (db/nginx/certbot) +
+   `docker compose build --pull` для собственных (backend/frontend).
+4. `up -d` всего стека.
+5. Ждёт `healthy` на `db`, потом запускает `alembic upgrade head`.
+6. `docker image prune -f`.
+
+Ручной фолбэк (если нужно покомпонентно):
 ```bash
 git pull
 docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend alembic upgrade head
 ```
-
-(Полноценный `scripts/deploy.sh` появится в задаче 6.6.)
 
 ## 12. Тонкости и safety
 

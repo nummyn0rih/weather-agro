@@ -1158,16 +1158,16 @@ security choice: если у злоумышленника был токен ДО
 - [x] HTTP → HTTPS редирект
 - [ ] Тест: SSL Labs grade A — проверить после деплоя на VPS
 
-### 6.6 🚀 INFRA — Production deploy
+### 6.6 🚀 INFRA — Production deploy ✅
 
 **DoD:**
 
-- [ ] `docker-compose.prod.yml` (без hot-reload, с restart policies)
-- [ ] Healthchecks для всех сервисов
-- [ ] Логи в JSON-формате, монтирование на хост
-- [ ] Скрипт `deploy.sh` для обновления (git pull → docker compose pull → up -d)
-- [ ] Развёрнуто на VPS, открывается по домену
-- [ ] Backend и frontend работают через HTTPS
+- [x] `docker-compose.prod.yml` (без hot-reload, с restart policies)
+- [x] Healthchecks для всех сервисов (db, backend, frontend, telegram_bot, nginx)
+- [x] Логи в JSON-формате, монтирование на хост (nginx — bind-mount `./logs/nginx`; остальные — docker `json-file` driver с ротацией 10MB × 5)
+- [x] Скрипт `scripts/deploy.sh` для обновления (git ff → pull/build → up -d → migrate → prune)
+- [ ] Развёрнуто на VPS, открывается по домену — проверяется на VPS вручную
+- [ ] Backend и frontend работают через HTTPS — проверяется на VPS вручную
 
 ### 6.7 📚 DOCS — Документация
 

@@ -11,9 +11,28 @@
 # - certbot-сайдкар крутит цикл renew каждые 12 часов;
 # - том uploads пробрасывается в nginx (read-only) для прямой отдачи /uploads/;
 # - JSON-логи nginx монтируются на хост (./logs/nginx);
-# - healthchecks для frontend, telegram_bot, nginx.
+# - JSON-логи backend/telegram/db/frontend пишутся через docker json-file driver
+#   с ротацией (10MB × 5 файлов) — файлы доступны на хосте через
+#   /var/lib/docker/containers/<id>/*.log и через `docker compose logs`;
+# - healthchecks для frontend, telegram_bot, nginx;
+# - restart: unless-stopped на всех сервисах (задано в базовом compose).
+
+# YAML-якорь для одинакового logging-блока во всех сервисах.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+    # Лейблы попадают в каждую запись лога — удобно для агрегаторов (Loki/ELK).
+    labels: "service,environment"
 
 services:
+  db:
+    logging: *default-logging
+    labels:
+      service: "db"
+      environment: "production"
+
   backend:
     # В проде убираем dev-bind-mount исходников — образ собран целиком.
     volumes:
@@ -21,6 +40,10 @@ services:
     environment:
       ENVIRONMENT: production
       LOG_LEVEL: INFO
+    logging: *default-logging
+    labels:
+      service: "backend"
+      environment: "production"
 
   frontend:
     # В проде frontend = nginx со статикой (см. frontend/Dockerfile target=runtime).
@@ -30,6 +53,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    logging: *default-logging
+    labels:
+      service: "frontend"
+      environment: "production"
 
   telegram_bot:
     environment:
@@ -42,6 +69,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    logging: *default-logging
+    labels:
+      service: "telegram_bot"
+      environment: "production"
 
   nginx:
     ports:
@@ -77,6 +108,10 @@ services:
         condition: service_healthy
       frontend:
         condition: service_healthy
+    logging: *default-logging
+    labels:
+      service: "nginx"
+      environment: "production"
 
   # ---- Certbot — автообновление сертификатов Let's Encrypt ----
   certbot:
@@ -93,6 +128,10 @@ services:
       /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot --webroot-path=/var/www/certbot --quiet; sleep 12h & wait $${!}; done"
     depends_on:
       - nginx
+    logging: *default-logging
+    labels:
+      service: "certbot"
+      environment: "production"
 
 volumes:
   letsencrypt:
