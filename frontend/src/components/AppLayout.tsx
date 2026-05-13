@@ -100,7 +100,7 @@ export function AppLayout() {
                 size="icon"
                 onClick={() => setIsDrawerOpen(false)}
                 aria-label="Закрыть меню"
-                className="rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0"
+                className="h-11 w-11 rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0 md:h-10 md:w-10"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -116,7 +116,7 @@ export function AppLayout() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0 md:hidden"
+              className="h-11 w-11 rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0 md:hidden"
               onClick={() => setIsDrawerOpen(true)}
               aria-label="Открыть меню"
             >
@@ -136,7 +136,7 @@ export function AppLayout() {
                   ? 'Переключить на светлую тему'
                   : 'Переключить на тёмную тему'
               }
-              className="rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0"
+              className="h-11 w-11 rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0 md:h-10 md:w-10"
             >
               {theme === 'dark' ? (
                 <Sun className="h-5 w-5" />
@@ -153,7 +153,7 @@ export function AppLayout() {
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="rounded-apple-full border-apple-separator bg-apple-surface/80 text-apple-blue transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0"
+              className="h-11 rounded-apple-full border-apple-separator bg-apple-surface/80 text-apple-blue transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0 md:h-9"
             >
               Выйти
             </Button>
@@ -196,7 +196,7 @@ function SidebarContent({ showHeader = true, isAdmin }: SidebarContentProps) {
                 end={item.end}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-apple-md px-3 py-2 text-sm transition-all duration-200 ease-apple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0',
+                    'flex min-h-[44px] items-center gap-3 rounded-apple-md px-3 py-2 text-sm transition-all duration-200 ease-apple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0 md:min-h-0',
                     isActive
                       ? 'bg-apple-blue-pastel font-medium text-apple-blue'
                       : 'text-apple-text-secondary hover:bg-apple-blue-pastel/60 hover:text-apple-text',

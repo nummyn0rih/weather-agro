@@ -101,7 +101,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="surface-notion flex h-full flex-col gap-6 p-6 md:p-8">
+    <div className="surface-notion flex h-full flex-col gap-5 p-4 sm:gap-6 sm:p-6 md:p-8">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight text-notion-text">
           Настройки

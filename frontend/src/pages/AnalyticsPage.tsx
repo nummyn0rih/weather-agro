@@ -199,7 +199,7 @@ export function AnalyticsPage() {
   );
 
   return (
-    <div className="surface-apple flex h-full flex-col gap-8 p-6 md:gap-10 md:p-10">
+    <div className="surface-apple flex h-full flex-col gap-6 p-4 sm:gap-8 sm:p-6 md:gap-10 md:p-10">
       <header>
         <h1 className="text-display-sm font-semibold tracking-apple-tight text-apple-text">
           Аналитика
@@ -278,7 +278,7 @@ function FiltersPanel(props: {
 
   return (
     <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
-      <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3 md:p-8">
+      <CardContent className="grid gap-5 p-4 sm:gap-6 sm:p-6 md:grid-cols-2 lg:grid-cols-3 md:p-8">
         <FilterBlock label="Локация">
           {locationsLoading ? (
             <Skeleton className="h-10 w-full" />
@@ -500,7 +500,7 @@ function PanelCard(props: {
 }) {
   return (
     <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
-      <CardContent className="flex flex-col gap-4 p-6 md:p-8">
+      <CardContent className="flex flex-col gap-4 p-4 sm:p-6 md:p-8">
         <div
           className="w-full"
           style={{ minHeight: props.height ?? 320 }}

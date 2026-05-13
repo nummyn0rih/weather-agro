@@ -241,7 +241,7 @@ export function ChartsPage() {
   });
 
   return (
-    <div className="surface-apple flex h-full flex-col gap-8 p-6 md:gap-10 md:p-10">
+    <div className="surface-apple flex h-full flex-col gap-6 p-4 sm:gap-8 sm:p-6 md:gap-10 md:p-10">
       <header>
         <h1 className="text-display-sm font-semibold tracking-apple-tight text-apple-text">
           Графики
@@ -301,7 +301,7 @@ function ChartFiltersForm(props: {
 
   return (
     <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
-      <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3 md:p-8">
+      <CardContent className="grid gap-5 p-4 sm:gap-6 sm:p-6 md:grid-cols-2 lg:grid-cols-3 md:p-8">
         <FilterBlock label="Тип графика">
           <Select
             value={filters.chart}
@@ -555,7 +555,7 @@ function ChartCard(props: {
 }) {
   return (
     <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
-      <CardContent className="flex flex-col gap-4 p-6 md:p-8">
+      <CardContent className="flex flex-col gap-4 p-4 sm:p-6 md:p-8">
         {props.toolbar && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {props.toolbar}
@@ -563,7 +563,7 @@ function ChartCard(props: {
         )}
         <div
           ref={props.containerRef as React.RefObject<HTMLDivElement>}
-          className="h-[480px] w-full"
+          className="h-[360px] w-full sm:h-[420px] md:h-[480px]"
           style={{ minHeight: 320 }}
         >
           {props.loading ? (

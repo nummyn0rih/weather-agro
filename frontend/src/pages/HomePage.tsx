@@ -70,7 +70,7 @@ export function HomePage() {
   });
 
   return (
-    <div className="surface-apple flex h-full flex-col gap-8 p-6 md:gap-10 md:p-10">
+    <div className="surface-apple flex h-full flex-col gap-6 p-4 sm:gap-8 sm:p-6 md:gap-10 md:p-10">
       <header>
         <h1 className="text-display-sm font-semibold tracking-apple-tight text-apple-text">
           Дашборд

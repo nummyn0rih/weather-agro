@@ -223,7 +223,7 @@ export function LocationsPage() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6 md:p-8">
+    <div className="flex h-full flex-col gap-5 p-4 sm:gap-6 sm:p-6 md:p-8">
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Локации</h1>
