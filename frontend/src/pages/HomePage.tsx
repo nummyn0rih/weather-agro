@@ -69,10 +69,12 @@ export function HomePage() {
   });
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6 md:p-8">
+    <div className="surface-apple flex h-full flex-col gap-8 p-6 md:gap-10 md:p-10">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Дашборд</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-display-sm font-semibold tracking-apple-tight text-apple-text">
+          Дашборд
+        </h1>
+        <p className="mt-2 text-base text-apple-text-secondary">
           Сводка по локациям и активным алертам.
         </p>
       </header>
@@ -80,15 +82,16 @@ export function HomePage() {
       {locationsQuery.isLoading ? (
         <CardsGridSkeleton />
       ) : locationsQuery.isError ? (
-        <Card>
+        <Card className="rounded-apple-lg border-0 bg-apple-surface text-apple-text shadow-apple-md">
           <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
-            <p className="text-sm text-destructive">
+            <p className="text-sm text-apple-red">
               {getErrorMessage(locationsQuery.error)}
             </p>
             <Button
               variant="outline"
               size="sm"
               onClick={() => void locationsQuery.refetch()}
+              className="rounded-apple-full border-apple-separator bg-apple-surface text-apple-blue hover:bg-apple-blue-pastel hover:text-apple-blue"
             >
               Повторить
             </Button>
@@ -97,7 +100,7 @@ export function HomePage() {
       ) : locations.length === 0 ? (
         <EmptyLocations />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {locations.map((loc, idx) => {
             const q = weatherQueries[idx];
             const points: WeatherDailyPoint[] = q?.data ?? [];
@@ -115,7 +118,7 @@ export function HomePage() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <AlertsBlock />
         <ForecastBlock locations={locations} />
       </div>
@@ -125,16 +128,19 @@ export function HomePage() {
 
 function CardsGridSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 3 }).map((_, idx) => (
-        <Card key={idx}>
-          <CardContent className="space-y-4 p-6">
-            <Skeleton className="h-5 w-1/2" />
+        <Card
+          key={idx}
+          className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md"
+        >
+          <CardContent className="space-y-5 p-7">
+            <Skeleton className="h-5 w-1/2 rounded-apple-sm bg-apple-bg" />
             <div className="grid grid-cols-2 gap-3">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-14 w-full rounded-apple-sm bg-apple-bg" />
+              <Skeleton className="h-14 w-full rounded-apple-sm bg-apple-bg" />
             </div>
-            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full rounded-apple-md bg-apple-bg" />
           </CardContent>
         </Card>
       ))}
@@ -144,12 +150,16 @@ function CardsGridSkeleton() {
 
 function EmptyLocations() {
   return (
-    <Card>
+    <Card className="rounded-apple-lg border-0 bg-apple-surface text-apple-text shadow-apple-md">
       <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-apple-text-secondary">
           Локаций пока нет. Добавьте первую, чтобы увидеть сводку.
         </p>
-        <Button asChild size="sm">
+        <Button
+          asChild
+          size="sm"
+          className="rounded-apple-full bg-apple-blue px-5 text-white shadow-apple-sm transition-all duration-200 ease-apple hover:bg-apple-blue-hover hover:shadow-apple-md"
+        >
           <Link to="/locations">К локациям</Link>
         </Button>
       </CardContent>

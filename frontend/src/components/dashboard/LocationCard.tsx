@@ -60,61 +60,61 @@ export function LocationCard({
     location.import_status === 'in_progress';
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
+    <Card className="group rounded-apple-lg border-0 bg-apple-surface text-apple-text shadow-apple-md transition-all duration-300 ease-apple hover:-translate-y-0.5 hover:shadow-apple-lg">
+      <CardHeader className="space-y-1 p-7 pb-3">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg">
+          <CardTitle className="text-xl font-semibold tracking-apple-tight">
             <Link
               to={`/locations`}
-              className="hover:underline"
+              className="rounded-apple-sm decoration-apple-blue/40 underline-offset-4 transition-colors hover:text-apple-blue hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-2 focus-visible:ring-offset-apple-surface"
               aria-label={`Перейти к локации ${location.name}`}
             >
               {location.name}
             </Link>
           </CardTitle>
-          <span className="text-xs text-muted-foreground">
+          <span className="rounded-apple-full bg-apple-bg px-2.5 py-1 text-xs font-medium text-apple-text-secondary">
             {location.region ?? '—'}
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5 p-7 pt-0">
         {loading ? (
           <CardSkeleton />
         ) : importPending ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-apple-text-secondary">
             Идёт загрузка истории — данные появятся после завершения импорта.
           </p>
         ) : chartPoints.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-apple-text-secondary">
             Нет данных за последние 7 дней.
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="text-xs text-muted-foreground">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-apple-md bg-apple-orange-pastel/60 p-4">
+                <div className="text-xs font-medium uppercase tracking-wide text-apple-text-tertiary">
                   Текущая температура
                 </div>
-                <div className="text-2xl font-semibold tabular-nums">
+                <div className="mt-1 text-3xl font-bold tabular-nums tracking-apple-tight text-apple-orange">
                   {formatTemp(last?.temp_avg)}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="mt-0.5 text-xs text-apple-text-secondary">
                   на {last?.time ?? '—'}
                 </div>
               </div>
-              <div>
-                <div className="text-xs text-muted-foreground">
+              <div className="rounded-apple-md bg-apple-teal-pastel/60 p-4">
+                <div className="text-xs font-medium uppercase tracking-wide text-apple-text-tertiary">
                   Осадки за сегодня
                 </div>
-                <div className="text-2xl font-semibold tabular-nums">
+                <div className="mt-1 text-3xl font-bold tabular-nums tracking-apple-tight text-apple-teal">
                   {formatPrecip(last?.precipitation)}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="mt-0.5 text-xs text-apple-text-secondary">
                   на {last?.time ?? '—'}
                 </div>
               </div>
             </div>
-            <div className="h-24">
+            <div className="h-24 text-apple-blue">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={chartPoints}
@@ -160,18 +160,18 @@ export function LocationCard({
 
 function CardSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Skeleton className="h-3 w-2/3" />
-          <Skeleton className="h-7 w-3/4" />
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2 rounded-apple-md bg-apple-bg p-4">
+          <Skeleton className="h-3 w-2/3 rounded-apple-sm bg-apple-surface" />
+          <Skeleton className="h-8 w-3/4 rounded-apple-sm bg-apple-surface" />
         </div>
-        <div className="space-y-2">
-          <Skeleton className="h-3 w-2/3" />
-          <Skeleton className="h-7 w-3/4" />
+        <div className="space-y-2 rounded-apple-md bg-apple-bg p-4">
+          <Skeleton className="h-3 w-2/3 rounded-apple-sm bg-apple-surface" />
+          <Skeleton className="h-8 w-3/4 rounded-apple-sm bg-apple-surface" />
         </div>
       </div>
-      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-24 w-full rounded-apple-md bg-apple-bg" />
     </div>
   );
 }
