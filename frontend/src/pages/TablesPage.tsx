@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Download, Loader2, Save, Trash2 } from 'lucide-react';
+import {
+  Calendar,
+  Download,
+  Hash,
+  MapPin,
+  Save,
+  Tag,
+  Trash2,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -603,10 +611,12 @@ export function TablesPage() {
   }, [filters.metric]);
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6 md:p-8">
+    <div className="surface-notion flex h-full flex-col gap-5 p-6 md:p-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Таблицы</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight text-notion-text">
+          Таблицы
+        </h1>
+        <p className="mt-1 text-sm text-notion-text-muted">
           Гибкая таблица с агрегациями, сортировкой, фильтрацией и экспортом.
         </p>
       </header>
@@ -629,37 +639,40 @@ export function TablesPage() {
         onDelete={handleDeletePreset}
       />
 
-      <Card>
-        <CardContent className="flex flex-col gap-4 p-6">
+      <Card className="rounded-notion-md border-notion-border bg-notion-bg text-notion-text shadow-none">
+        <CardContent className="flex flex-col gap-4 p-5">
           <div className="flex flex-wrap items-end gap-3">
             <div className="grow min-w-[200px]">
-              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <Label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
                 Поиск
               </Label>
               <Input
                 value={textFilter}
                 onChange={(e) => setTextFilter(e.target.value)}
                 placeholder="Период / локация / параметр"
+                className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text placeholder:text-notion-text-subtle focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
               />
             </div>
             <div className="w-32">
-              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <Label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
                 {filters.metric} ≥
               </Label>
               <Input
                 type="number"
                 value={metricMin}
                 onChange={(e) => setMetricMin(e.target.value)}
+                className="notion-numeric rounded-notion-sm border-notion-border bg-notion-bg font-mono text-notion-text focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
               />
             </div>
             <div className="w-32">
-              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <Label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
                 {filters.metric} ≤
               </Label>
               <Input
                 type="number"
                 value={metricMax}
                 onChange={(e) => setMetricMax(e.target.value)}
+                className="notion-numeric rounded-notion-sm border-notion-border bg-notion-bg font-mono text-notion-text focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
               />
             </div>
             <div className="ml-auto flex flex-wrap gap-2">
@@ -668,6 +681,7 @@ export function TablesPage() {
                 size="sm"
                 onClick={handleExportCsv}
                 disabled={sortedRows.length === 0}
+                className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
               >
                 <Download className="mr-1 h-4 w-4" /> CSV
               </Button>
@@ -676,6 +690,7 @@ export function TablesPage() {
                 size="sm"
                 onClick={handleExportXls}
                 disabled={sortedRows.length === 0}
+                className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
               >
                 <Download className="mr-1 h-4 w-4" /> Excel
               </Button>
@@ -711,14 +726,14 @@ interface FiltersFormProps {
 function FiltersForm(props: FiltersFormProps) {
   const { filters, onChange, locations, locationsLoading } = props;
   return (
-    <Card>
-      <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-4">
+    <Card className="rounded-notion-md border-notion-border bg-notion-bg text-notion-text shadow-none">
+      <CardContent className="grid gap-5 p-5 md:grid-cols-2 lg:grid-cols-4">
         <FilterBlock label="Источник">
           <Select
             value={filters.source}
             onValueChange={(v) => onChange({ source: v as WeatherSource })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus:ring-1 focus:ring-notion-accent-blue focus:ring-offset-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -736,7 +751,7 @@ function FiltersForm(props: FiltersFormProps) {
             value={filters.period}
             onValueChange={(v) => onChange({ period: v as PeriodPreset })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus:ring-1 focus:ring-notion-accent-blue focus:ring-offset-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -753,11 +768,13 @@ function FiltersForm(props: FiltersFormProps) {
                 type="date"
                 value={filters.customFrom}
                 onChange={(e) => onChange({ customFrom: e.target.value })}
+                className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
               />
               <Input
                 type="date"
                 value={filters.customTo}
                 onChange={(e) => onChange({ customTo: e.target.value })}
+                className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
               />
             </div>
           )}
@@ -770,7 +787,7 @@ function FiltersForm(props: FiltersFormProps) {
               onChange({ aggregation: v as StatsAggregation })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus:ring-1 focus:ring-notion-accent-blue focus:ring-offset-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -788,7 +805,7 @@ function FiltersForm(props: FiltersFormProps) {
             value={filters.metric}
             onValueChange={(v) => onChange({ metric: v as Metric })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus:ring-1 focus:ring-notion-accent-blue focus:ring-offset-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -803,9 +820,9 @@ function FiltersForm(props: FiltersFormProps) {
 
         <FilterBlock label="Локации" className="md:col-span-2 lg:col-span-4">
           {locationsLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full rounded-notion-sm bg-notion-surface-hover" />
           ) : locations.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-notion-text-muted">
               Локаций нет. Добавьте на странице «Локации».
             </p>
           ) : (
@@ -842,7 +859,7 @@ function FilterBlock(props: {
 }) {
   return (
     <div className={props.className}>
-      <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <Label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
         {props.label}
       </Label>
       {props.children}
@@ -859,18 +876,26 @@ interface ChipOption {
 
 function ChipGroup({ options }: { options: ChipOption[] }) {
   return (
-    <div className="flex max-h-40 flex-wrap gap-2 overflow-auto">
+    <div className="flex max-h-40 flex-wrap gap-1.5 overflow-auto">
       {options.map((opt) => (
         <button
           key={opt.key}
           type="button"
           onClick={opt.onToggle}
-          className={`rounded-full border px-3 py-1 text-xs transition ${
+          className={`inline-flex items-center gap-1.5 rounded-notion-sm px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-notion-accent-blue ${
             opt.selected
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-input bg-background text-foreground hover:bg-accent'
+              ? 'bg-notion-accent-blue-soft text-notion-accent-blue'
+              : 'bg-[var(--notion-chip-gray-bg)] text-[var(--notion-chip-gray-fg)] hover:bg-notion-surface-hover'
           }`}
         >
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{
+              backgroundColor: opt.selected
+                ? 'var(--notion-accent-blue)'
+                : 'var(--notion-chip-gray-fg)',
+            }}
+          />
           {opt.label}
         </button>
       ))}
@@ -889,16 +914,17 @@ interface PresetBarProps {
 
 function PresetBar(props: PresetBarProps) {
   return (
-    <Card>
-      <CardContent className="flex flex-wrap items-end gap-3 p-6">
+    <Card className="rounded-notion-md border-notion-border bg-notion-bg text-notion-text shadow-none">
+      <CardContent className="flex flex-wrap items-end gap-3 p-5">
         <div className="grow min-w-[200px]">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
             Пресет — название
           </Label>
           <Input
             value={props.presetName}
             onChange={(e) => props.onNameChange(e.target.value)}
             placeholder="Напр. «Лето: температура»"
+            className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text placeholder:text-notion-text-subtle focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
           />
         </div>
         <Button
@@ -906,11 +932,12 @@ function PresetBar(props: PresetBarProps) {
           size="sm"
           onClick={props.onSave}
           disabled={!props.presetName.trim()}
+          className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0"
         >
           <Save className="mr-1 h-4 w-4" /> Сохранить
         </Button>
         <div className="min-w-[220px]">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
             Загрузить пресет
           </Label>
           <Select
@@ -918,7 +945,7 @@ function PresetBar(props: PresetBarProps) {
             onValueChange={(v) => props.onLoad(v)}
             disabled={props.presets.length === 0}
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus:ring-1 focus:ring-notion-accent-blue focus:ring-offset-0">
               <SelectValue
                 placeholder={
                   props.presets.length === 0 ? 'Нет пресетов' : 'Выберите…'
@@ -935,13 +962,13 @@ function PresetBar(props: PresetBarProps) {
           </Select>
         </div>
         {props.presets.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {props.presets.map((p) => (
               <button
                 key={p.name}
                 type="button"
                 onClick={() => props.onDelete(p.name)}
-                className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-3 py-1 text-xs text-muted-foreground hover:bg-accent"
+                className="inline-flex items-center gap-1 rounded-notion-sm bg-[var(--notion-chip-red-bg)] px-2 py-0.5 text-xs font-medium text-[var(--notion-chip-red-fg)] transition-colors hover:bg-notion-surface-hover focus:outline-none focus-visible:ring-1 focus-visible:ring-notion-accent-blue"
                 title={`Удалить пресет «${p.name}»`}
               >
                 <Trash2 className="h-3 w-3" />
@@ -970,25 +997,53 @@ interface StatsTableProps {
 function StatsTable(props: StatsTableProps) {
   if (!props.queryEnabled) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-40 items-center justify-center rounded-notion-md border border-dashed border-notion-border text-sm text-notion-text-muted">
         Выберите хотя бы одну локацию и один параметр.
       </div>
     );
   }
   if (props.loading) {
     return (
-      <div className="flex h-40 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="overflow-hidden rounded-notion-md border border-notion-border">
+        <div className="border-b border-notion-border bg-notion-bg-secondary px-3 py-2">
+          <div className="flex gap-6">
+            {[80, 96, 120, 60, 60, 60, 60, 40].map((w, i) => (
+              <Skeleton
+                key={i}
+                className="h-3 rounded-notion-sm bg-notion-surface-hover"
+                style={{ width: w }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="divide-y divide-notion-border">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-6 px-3 py-2.5">
+              {[80, 96, 120, 60, 60, 60, 60, 40].map((w, j) => (
+                <Skeleton
+                  key={j}
+                  className="h-3 rounded-notion-sm bg-notion-surface-hover"
+                  style={{ width: w }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
   if (props.error) {
     return (
-      <div className="flex h-40 flex-col items-center justify-center gap-3 text-center">
-        <p className="text-sm text-destructive">
+      <div className="flex h-40 flex-col items-center justify-center gap-3 rounded-notion-md border border-dashed border-notion-border text-center">
+        <p className="text-sm text-[var(--notion-chip-red-fg)]">
           {getErrorMessage(props.error)}
         </p>
-        <Button variant="outline" size="sm" onClick={props.onRetry}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={props.onRetry}
+          className="rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover"
+        >
           Повторить
         </Button>
       </div>
@@ -996,40 +1051,44 @@ function StatsTable(props: StatsTableProps) {
   }
   if (props.rows.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-40 items-center justify-center rounded-notion-md border border-dashed border-notion-border text-sm text-notion-text-muted">
         Нет данных по выбранным фильтрам.
       </div>
     );
   }
 
   return (
-    <div className="overflow-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
+    <div className="relative max-h-[65vh] overflow-auto rounded-notion-md border border-notion-border">
+      <Table className="border-collapse">
+        <TableHeader className="sticky top-0 z-10 bg-notion-bg-secondary [&_tr]:border-notion-border">
+          <TableRow className="hover:bg-transparent">
             <SortableHead
               label="Период"
               colKey="time"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<Calendar className="h-3 w-3" />}
             />
             <SortableHead
               label="Локация"
               colKey="location"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<MapPin className="h-3 w-3" />}
             />
             <SortableHead
               label="Параметр"
               colKey="parameter"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<Tag className="h-3 w-3" />}
             />
             <SortableHead
               label="Min"
               colKey="min"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<Hash className="h-3 w-3" />}
               numeric
             />
             <SortableHead
@@ -1037,6 +1096,7 @@ function StatsTable(props: StatsTableProps) {
               colKey="max"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<Hash className="h-3 w-3" />}
               numeric
             />
             <SortableHead
@@ -1044,6 +1104,7 @@ function StatsTable(props: StatsTableProps) {
               colKey="mean"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<Hash className="h-3 w-3" />}
               numeric
             />
             <SortableHead
@@ -1051,6 +1112,7 @@ function StatsTable(props: StatsTableProps) {
               colKey="sum"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<Hash className="h-3 w-3" />}
               numeric
             />
             <SortableHead
@@ -1058,6 +1120,7 @@ function StatsTable(props: StatsTableProps) {
               colKey="count"
               sort={props.sort}
               onSort={props.onSort}
+              icon={<Hash className="h-3 w-3" />}
               numeric
             />
           </TableRow>
@@ -1072,42 +1135,45 @@ function StatsTable(props: StatsTableProps) {
             );
             const metricCellStyle = bg ? { backgroundColor: bg } : undefined;
             return (
-              <TableRow key={row.key}>
-                <TableCell className="whitespace-nowrap font-medium">
+              <TableRow
+                key={row.key}
+                className="border-notion-border text-notion-text transition-colors hover:bg-notion-row-hover"
+              >
+                <TableCell className="whitespace-nowrap px-3 py-2 font-medium text-notion-text-muted">
                   {row.bucket}
                 </TableCell>
-                <TableCell className="whitespace-nowrap">
+                <TableCell className="whitespace-nowrap px-3 py-2">
                   {row.locationName}
                 </TableCell>
-                <TableCell className="whitespace-nowrap font-mono text-xs">
+                <TableCell className="whitespace-nowrap px-3 py-2 font-mono text-xs text-notion-text-muted">
                   {row.parameter}
                 </TableCell>
                 <TableCell
-                  className="text-right font-mono tabular-nums"
+                  className="notion-numeric px-3 py-2 text-right font-mono"
                   style={props.metric === 'min' ? metricCellStyle : undefined}
                 >
                   {formatNumber(row.min)}
                 </TableCell>
                 <TableCell
-                  className="text-right font-mono tabular-nums"
+                  className="notion-numeric px-3 py-2 text-right font-mono"
                   style={props.metric === 'max' ? metricCellStyle : undefined}
                 >
                   {formatNumber(row.max)}
                 </TableCell>
                 <TableCell
-                  className="text-right font-mono tabular-nums"
+                  className="notion-numeric px-3 py-2 text-right font-mono"
                   style={props.metric === 'mean' ? metricCellStyle : undefined}
                 >
                   {formatNumber(row.mean)}
                 </TableCell>
                 <TableCell
-                  className="text-right font-mono tabular-nums"
+                  className="notion-numeric px-3 py-2 text-right font-mono"
                   style={props.metric === 'sum' ? metricCellStyle : undefined}
                 >
                   {formatNumber(row.sum)}
                 </TableCell>
                 <TableCell
-                  className="text-right font-mono tabular-nums"
+                  className="notion-numeric px-3 py-2 text-right font-mono text-notion-text-muted"
                   style={props.metric === 'count' ? metricCellStyle : undefined}
                 >
                   {row.count}
@@ -1127,20 +1193,30 @@ interface SortableHeadProps {
   sort: SortState;
   onSort: (key: SortKey) => void;
   numeric?: boolean;
+  icon?: React.ReactNode;
 }
 
 function SortableHead(props: SortableHeadProps) {
   const active = props.sort.key === props.colKey;
   const arrow = active ? (props.sort.dir === 'asc' ? '↑' : '↓') : '';
   return (
-    <TableHead className={props.numeric ? 'text-right' : ''}>
+    <TableHead
+      className={`h-9 px-3 text-[11px] font-medium uppercase tracking-wide text-notion-text-muted ${
+        props.numeric ? 'text-right' : ''
+      }`}
+    >
       <button
         type="button"
         onClick={() => props.onSort(props.colKey)}
-        className="inline-flex items-center gap-1 font-medium text-muted-foreground hover:text-foreground"
+        className={`inline-flex items-center gap-1.5 font-medium text-notion-text-muted transition-colors hover:text-notion-text focus:outline-none focus-visible:text-notion-text ${
+          props.numeric ? 'flex-row-reverse' : ''
+        }`}
       >
+        {props.icon && (
+          <span className="text-notion-text-subtle">{props.icon}</span>
+        )}
         {props.label}
-        <span className="text-xs">{arrow}</span>
+        <span className="text-[10px] text-notion-text-subtle">{arrow}</span>
       </button>
     </TableHead>
   );
