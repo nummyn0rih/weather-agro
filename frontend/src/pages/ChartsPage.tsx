@@ -241,10 +241,12 @@ export function ChartsPage() {
   });
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6 md:p-8">
+    <div className="surface-apple flex h-full flex-col gap-8 p-6 md:gap-10 md:p-10">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Графики</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-display-sm font-semibold tracking-apple-tight text-apple-text">
+          Графики
+        </h1>
+        <p className="mt-2 text-base text-apple-text-secondary">
           Интерактивные графики, тепловые карты и матрица корреляций.
         </p>
       </header>
@@ -298,8 +300,8 @@ function ChartFiltersForm(props: {
   };
 
   return (
-    <Card>
-      <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3">
+    <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
+      <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3 md:p-8">
         <FilterBlock label="Тип графика">
           <Select
             value={filters.chart}
@@ -480,7 +482,7 @@ function FilterBlock(props: {
 }) {
   return (
     <div className={props.className}>
-      <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-apple-text-tertiary">
         {props.label}
       </Label>
       {props.children}
@@ -503,10 +505,10 @@ function ChipGroup({ options }: { options: ChipOption[] }) {
           key={opt.key}
           type="button"
           onClick={opt.onToggle}
-          className={`rounded-full border px-3 py-1 text-xs transition ${
+          className={`rounded-apple-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ease-apple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-2 focus-visible:ring-offset-apple-bg ${
             opt.selected
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-input bg-background text-foreground hover:bg-accent'
+              ? 'border-transparent bg-apple-blue text-white shadow-apple-sm'
+              : 'border-apple-separator bg-apple-surface text-apple-text-secondary hover:bg-apple-blue-pastel hover:text-apple-blue'
           }`}
         >
           {opt.label}
@@ -524,7 +526,7 @@ function ChartArea(props: {
   const { filters, locations, locationsReady } = props;
 
   if (!locationsReady) {
-    return <Skeleton className="h-96 w-full" />;
+    return <Skeleton className="h-96 w-full rounded-apple-lg bg-apple-bg" />;
   }
 
   switch (filters.chart) {
@@ -552,8 +554,8 @@ function ChartCard(props: {
   containerRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-4 p-6">
+    <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
+      <CardContent className="flex flex-col gap-4 p-6 md:p-8">
         {props.toolbar && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {props.toolbar}
@@ -566,7 +568,7 @@ function ChartCard(props: {
         >
           {props.loading ? (
             <div className="flex h-full items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Loader2 className="h-6 w-6 animate-spin text-apple-text-tertiary" />
             </div>
           ) : props.error ? (
             <ErrorState error={props.error} onRetry={props.onRetry} />
@@ -584,7 +586,7 @@ function ChartCard(props: {
 function EmptyState({ message }: { message?: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-apple-text-secondary">
         {message ?? 'Нет данных по выбранным фильтрам.'}
       </p>
     </div>
@@ -600,9 +602,14 @@ function ErrorState({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-      <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+      <p className="text-sm text-apple-red">{getErrorMessage(error)}</p>
       {onRetry && (
-        <Button variant="outline" size="sm" onClick={onRetry}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          className="rounded-apple-full border-apple-separator bg-apple-surface text-apple-blue hover:bg-apple-blue-pastel hover:text-apple-blue"
+        >
           Повторить
         </Button>
       )}
@@ -660,6 +667,7 @@ function ExportToolbar(props: ExportToolbarProps) {
         size="sm"
         onClick={handlePng}
         disabled={props.disabled}
+        className="rounded-apple-full border-apple-separator bg-apple-surface text-apple-blue transition-all duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-2 focus-visible:ring-offset-apple-bg"
       >
         <ImageIcon className="mr-1 h-4 w-4" /> PNG
       </Button>
@@ -668,6 +676,7 @@ function ExportToolbar(props: ExportToolbarProps) {
         size="sm"
         onClick={handleSvg}
         disabled={props.disabled}
+        className="rounded-apple-full border-apple-separator bg-apple-surface text-apple-blue transition-all duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-2 focus-visible:ring-offset-apple-bg"
       >
         <ImageIcon className="mr-1 h-4 w-4" /> SVG
       </Button>
@@ -676,6 +685,7 @@ function ExportToolbar(props: ExportToolbarProps) {
         size="sm"
         onClick={handleCsv}
         disabled={props.disabled}
+        className="rounded-apple-full border-apple-separator bg-apple-surface text-apple-blue transition-all duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-2 focus-visible:ring-offset-apple-bg"
       >
         <Download className="mr-1 h-4 w-4" /> CSV
       </Button>
@@ -787,11 +797,28 @@ function DailyChart(props: { filters: ChartFilters; locations: Location[] }) {
     >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
-          <XAxis dataKey="time" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--apple-separator)"
+            opacity={1}
+          />
+          <XAxis
+            dataKey="time"
+            tick={APPLE_AXIS_TICK}
+            stroke="var(--apple-separator)"
+          />
+          <YAxis tick={APPLE_AXIS_TICK} stroke="var(--apple-separator)" />
+          <Tooltip
+            contentStyle={APPLE_TOOLTIP_CONTENT}
+            labelStyle={APPLE_TOOLTIP_LABEL}
+            cursor={APPLE_TOOLTIP_CURSOR}
+          />
+          <Legend
+            wrapperStyle={{
+              fontSize: 12,
+              color: 'var(--apple-text-secondary)',
+            }}
+          />
           {series.map((s) => (
             <Line
               key={s.key}
@@ -891,11 +918,28 @@ function CumulativeChart(props: {
     >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
-          <XAxis dataKey="time" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--apple-separator)"
+            opacity={1}
+          />
+          <XAxis
+            dataKey="time"
+            tick={APPLE_AXIS_TICK}
+            stroke="var(--apple-separator)"
+          />
+          <YAxis tick={APPLE_AXIS_TICK} stroke="var(--apple-separator)" />
+          <Tooltip
+            contentStyle={APPLE_TOOLTIP_CONTENT}
+            labelStyle={APPLE_TOOLTIP_LABEL}
+            cursor={APPLE_TOOLTIP_CURSOR}
+          />
+          <Legend
+            wrapperStyle={{
+              fontSize: 12,
+              color: 'var(--apple-text-secondary)',
+            }}
+          />
           {series.map((s) => (
             <Line
               key={s.key}
@@ -1099,6 +1143,32 @@ function CorrelationsChart({ filters }: { filters: ChartFilters }) {
 }
 
 const fillStyle: CSSProperties = { width: '100%', height: '100%' };
+
+const APPLE_TOOLTIP_CONTENT: CSSProperties = {
+  background: 'var(--apple-surface-elevated)',
+  border: 'none',
+  borderRadius: 'var(--apple-radius-md)',
+  boxShadow: 'var(--apple-shadow-lg)',
+  fontSize: 12,
+  color: 'var(--apple-text-primary)',
+  padding: '8px 12px',
+};
+
+const APPLE_TOOLTIP_LABEL: CSSProperties = {
+  color: 'var(--apple-text-secondary)',
+  fontSize: 11,
+  marginBottom: 4,
+};
+
+const APPLE_TOOLTIP_CURSOR = {
+  stroke: 'var(--apple-separator)',
+  strokeWidth: 1,
+};
+
+const APPLE_AXIS_TICK = {
+  fontSize: 12,
+  fill: 'var(--apple-text-secondary)',
+};
 
 function plotlyLayout(opts: { xaxisTitle: string; yaxisTitle: string }) {
   return {

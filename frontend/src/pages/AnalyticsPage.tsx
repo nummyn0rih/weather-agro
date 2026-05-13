@@ -199,10 +199,12 @@ export function AnalyticsPage() {
   );
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6 md:p-8">
+    <div className="surface-apple flex h-full flex-col gap-8 p-6 md:gap-10 md:p-10">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Аналитика</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-display-sm font-semibold tracking-apple-tight text-apple-text">
+          Аналитика
+        </h1>
+        <p className="mt-2 text-base text-apple-text-secondary">
           Сводная статистика, аномалии, корреляции и climate normals.
         </p>
       </header>
@@ -236,7 +238,7 @@ function TabsBar({
 }) {
   return (
     <div
-      className="flex flex-wrap gap-2 border-b"
+      className="flex flex-wrap gap-1 border-b border-apple-separator"
       role="tablist"
       aria-label="Аналитика — разделы"
     >
@@ -248,10 +250,10 @@ function TabsBar({
           aria-selected={tab === t.id}
           onClick={() => onChange(t.id)}
           className={cn(
-            '-mb-px border-b-2 px-3 py-2 text-sm transition-colors',
+            '-mb-px border-b-2 px-4 py-2.5 text-sm transition-all duration-200 ease-apple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-2 focus-visible:ring-offset-apple-bg',
             tab === t.id
-              ? 'border-primary text-foreground font-medium'
-              : 'border-transparent text-muted-foreground hover:text-foreground',
+              ? 'border-apple-blue font-medium text-apple-blue'
+              : 'border-transparent text-apple-text-secondary hover:text-apple-text',
           )}
         >
           {t.label}
@@ -275,8 +277,8 @@ function FiltersPanel(props: {
   const showNormalPeriod = tab === 'anomalies' || tab === 'normals';
 
   return (
-    <Card>
-      <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3">
+    <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
+      <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3 md:p-8">
         <FilterBlock label="Локация">
           {locationsLoading ? (
             <Skeleton className="h-10 w-full" />
@@ -429,7 +431,7 @@ function FilterBlock(props: {
 }) {
   return (
     <div className={props.className}>
-      <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-apple-text-tertiary">
         {props.label}
       </Label>
       {props.children}
@@ -453,10 +455,10 @@ function ChipGroup({ options }: { options: ChipOption[] }) {
           type="button"
           onClick={opt.onToggle}
           className={cn(
-            'rounded-full border px-3 py-1 text-xs transition',
+            'rounded-apple-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ease-apple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-2 focus-visible:ring-offset-apple-bg',
             opt.selected
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-input bg-background text-foreground hover:bg-accent',
+              ? 'border-transparent bg-apple-blue text-white shadow-apple-sm'
+              : 'border-apple-separator bg-apple-surface text-apple-text-secondary hover:bg-apple-blue-pastel hover:text-apple-blue',
           )}
         >
           {opt.label}
@@ -473,7 +475,7 @@ function TabContent(props: {
   locationsReady: boolean;
 }) {
   if (!props.locationsReady) {
-    return <Skeleton className="h-96 w-full" />;
+    return <Skeleton className="h-96 w-full rounded-apple-lg bg-apple-bg" />;
   }
   switch (props.tab) {
     case 'stats':
@@ -497,15 +499,15 @@ function PanelCard(props: {
   height?: number;
 }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-4 p-6">
+    <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
+      <CardContent className="flex flex-col gap-4 p-6 md:p-8">
         <div
           className="w-full"
           style={{ minHeight: props.height ?? 320 }}
         >
           {props.loading ? (
             <div className="flex h-80 items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Loader2 className="h-6 w-6 animate-spin text-apple-text-tertiary" />
             </div>
           ) : props.error ? (
             <ErrorState error={props.error} onRetry={props.onRetry} />
@@ -523,7 +525,7 @@ function PanelCard(props: {
 function EmptyState({ message }: { message?: string }) {
   return (
     <div className="flex h-80 flex-col items-center justify-center gap-2 text-center">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-apple-text-secondary">
         {message ?? 'Нет данных по выбранным фильтрам.'}
       </p>
     </div>
@@ -539,9 +541,14 @@ function ErrorState({
 }) {
   return (
     <div className="flex h-80 flex-col items-center justify-center gap-3 text-center">
-      <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+      <p className="text-sm text-apple-red">{getErrorMessage(error)}</p>
       {onRetry && (
-        <Button variant="outline" size="sm" onClick={onRetry}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          className="rounded-apple-full border-apple-separator bg-apple-surface text-apple-blue hover:bg-apple-blue-pastel hover:text-apple-blue"
+        >
           Повторить
         </Button>
       )}
@@ -713,18 +720,26 @@ function AnomaliesTab({ filters }: { filters: BaseFilters }) {
           <ComposedChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="currentColor"
-              opacity={0.1}
+              stroke="var(--apple-separator)"
+              opacity={1}
             />
-            <XAxis dataKey="time" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <XAxis
+              dataKey="time"
+              tick={APPLE_AXIS_TICK}
+              stroke="var(--apple-separator)"
+            />
+            <YAxis tick={APPLE_AXIS_TICK} stroke="var(--apple-separator)" />
+            <Tooltip
+              contentStyle={APPLE_TOOLTIP_CONTENT}
+              labelStyle={APPLE_TOOLTIP_LABEL}
+              cursor={APPLE_TOOLTIP_CURSOR}
+            />
+            <Legend wrapperStyle={APPLE_LEGEND_STYLE} />
             <Line
               name="Норма"
               dataKey="mean"
               type="monotone"
-              stroke="#94a3b8"
+              stroke={APPLE_CHART_COLORS.gray}
               dot={false}
               strokeWidth={1.5}
               strokeDasharray="4 4"
@@ -735,7 +750,7 @@ function AnomaliesTab({ filters }: { filters: BaseFilters }) {
               name="±1σ"
               dataKey="upper1"
               type="monotone"
-              stroke="#cbd5f5"
+              stroke={APPLE_CHART_COLORS.blueSoft}
               dot={false}
               strokeWidth={1}
               isAnimationActive={false}
@@ -744,7 +759,7 @@ function AnomaliesTab({ filters }: { filters: BaseFilters }) {
             <Line
               dataKey="lower1"
               type="monotone"
-              stroke="#cbd5f5"
+              stroke={APPLE_CHART_COLORS.blueSoft}
               dot={false}
               strokeWidth={1}
               legendType="none"
@@ -755,7 +770,7 @@ function AnomaliesTab({ filters }: { filters: BaseFilters }) {
               name="Значение"
               dataKey="value"
               type="monotone"
-              stroke="#2563eb"
+              stroke={APPLE_CHART_COLORS.blue}
               dot={false}
               strokeWidth={2}
               isAnimationActive={false}
@@ -764,13 +779,13 @@ function AnomaliesTab({ filters }: { filters: BaseFilters }) {
             <Scatter
               name="|σ| > 1"
               dataKey="moderate"
-              fill="#f59e0b"
+              fill={APPLE_CHART_COLORS.orange}
               shape="circle"
             />
             <Scatter
               name="|σ| > 2"
               dataKey="extreme"
-              fill="#dc2626"
+              fill={APPLE_CHART_COLORS.red}
               shape="circle"
             />
           </ComposedChart>
@@ -783,7 +798,7 @@ function AnomaliesTab({ filters }: { filters: BaseFilters }) {
 
 function AnomaliesLegend() {
   return (
-    <p className="text-xs text-muted-foreground">
+    <p className="text-xs text-apple-text-tertiary">
       Жёлтые точки — отклонение более 1σ; красные — более 2σ. Норма
       рассчитывается по выбранному бакету (месяц / неделя / день года).
     </p>
@@ -927,24 +942,33 @@ function NormalsTab({ filters }: { filters: BaseFilters }) {
           <ComposedChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="currentColor"
-              opacity={0.1}
+              stroke="var(--apple-separator)"
+              opacity={1}
             />
-            <XAxis dataKey="bucket" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <XAxis
+              dataKey="bucket"
+              tick={APPLE_AXIS_TICK}
+              stroke="var(--apple-separator)"
+            />
+            <YAxis tick={APPLE_AXIS_TICK} stroke="var(--apple-separator)" />
+            <Tooltip
+              contentStyle={APPLE_TOOLTIP_CONTENT}
+              labelStyle={APPLE_TOOLTIP_LABEL}
+              cursor={{ fill: 'var(--apple-blue-pastel)', opacity: 0.4 }}
+            />
+            <Legend wrapperStyle={APPLE_LEGEND_STYLE} />
             <Bar
               name="Среднее"
               dataKey="mean"
-              fill="#2563eb"
+              fill={APPLE_CHART_COLORS.blue}
+              radius={[6, 6, 0, 0]}
               isAnimationActive={false}
             />
             <Line
               name="Min"
               dataKey="min"
               type="monotone"
-              stroke="#0891b2"
+              stroke={APPLE_CHART_COLORS.teal}
               dot={false}
               strokeWidth={1.5}
               isAnimationActive={false}
@@ -954,7 +978,7 @@ function NormalsTab({ filters }: { filters: BaseFilters }) {
               name="Max"
               dataKey="max"
               type="monotone"
-              stroke="#dc2626"
+              stroke={APPLE_CHART_COLORS.red}
               dot={false}
               strokeWidth={1.5}
               isAnimationActive={false}
@@ -983,11 +1007,13 @@ function NormalsTable(props: {
   const sorted = [...props.rows].sort((a, b) => a.bucket - b.bucket);
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3 p-6">
+    <Card className="rounded-apple-lg border-0 bg-apple-surface shadow-apple-md">
+      <CardContent className="flex flex-col gap-3 p-6 md:p-8">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-medium">Климатические нормы</h2>
-          <span className="text-xs text-muted-foreground">
+          <h2 className="text-sm font-medium text-apple-text">
+            Климатические нормы
+          </h2>
+          <span className="text-xs text-apple-text-tertiary">
             {props.yearFrom && props.yearTo
               ? `Базовый период: ${props.yearFrom}–${props.yearTo}`
               : 'Базовый период не определён'}
@@ -1035,6 +1061,48 @@ function NormalsTable(props: {
 }
 
 const fillStyle: CSSProperties = { width: '100%', height: '100%' };
+
+const APPLE_TOOLTIP_CONTENT: CSSProperties = {
+  background: 'var(--apple-surface-elevated)',
+  border: 'none',
+  borderRadius: 'var(--apple-radius-md)',
+  boxShadow: 'var(--apple-shadow-lg)',
+  fontSize: 12,
+  color: 'var(--apple-text-primary)',
+  padding: '8px 12px',
+};
+
+const APPLE_TOOLTIP_LABEL: CSSProperties = {
+  color: 'var(--apple-text-secondary)',
+  fontSize: 11,
+  marginBottom: 4,
+};
+
+const APPLE_TOOLTIP_CURSOR = {
+  stroke: 'var(--apple-separator)',
+  strokeWidth: 1,
+};
+
+const APPLE_AXIS_TICK = {
+  fontSize: 12,
+  fill: 'var(--apple-text-secondary)',
+};
+
+const APPLE_LEGEND_STYLE: CSSProperties = {
+  fontSize: 12,
+  color: 'var(--apple-text-secondary)',
+};
+
+const APPLE_CHART_COLORS = {
+  blue: '#007AFF',
+  teal: '#5AC8FA',
+  green: '#34C759',
+  orange: '#FF9500',
+  red: '#FF3B30',
+  purple: '#AF52DE',
+  gray: '#8E8E93',
+  blueSoft: 'rgba(0, 122, 255, 0.28)',
+};
 
 function plotlyLayout() {
   return {
