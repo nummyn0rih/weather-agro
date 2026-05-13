@@ -21,6 +21,9 @@ const LocationsPage = lazy(() => import('@/pages/LocationsPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const ReportsPage = lazy(() => import('@/pages/ReportsPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const StyleguidePage = import.meta.env.DEV
+  ? lazy(() => import('@/pages/StyleguidePage'))
+  : null;
 const TablesPage = lazy(() => import('@/pages/TablesPage'));
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const InvitesPage = lazy(() => import('@/pages/admin/InvitesPage'));
@@ -57,6 +60,9 @@ function App() {
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              {StyleguidePage && (
+                <Route path="/styleguide" element={<StyleguidePage />} />
+              )}
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Navigate to="users" replace />} />

@@ -11,6 +11,15 @@
 ## [Unreleased]
 
 ### Added
+- FE-V (7.1) — дизайн-токены и темы:
+  - `frontend/src/styles/tokens.css` — CSS-переменные двух стилей (Apple HIG
+    и Notion-style), светлая и тёмная темы.
+  - Шрифты Inter и JetBrains Mono подключены через Google Fonts.
+  - `tailwind.config.js` расширен токенами: цвета (`apple-*`, `notion-*`),
+    радиусы (`rounded-apple-{sm,md,lg,xl}`, `rounded-notion-*`), тени
+    (`shadow-apple-{sm,md,lg,xl}`), display-кегли, easing `ease-apple`.
+  - Страница `/styleguide` (только в dev) с примерами типографики,
+    палитры, карточек, теней, таблиц и чипов.
 - Документация:
   - [`docs/BACKUP.md`](docs/BACKUP.md) — настройка Яндекс.Диск (WebDAV),
     ротация, ручной запуск, восстановление в работающий стенд и в чистое

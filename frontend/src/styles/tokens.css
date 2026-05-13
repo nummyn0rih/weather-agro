@@ -1,0 +1,270 @@
+/*
+ * Weather Agro — design tokens
+ *
+ * Two coexisting style systems:
+ *   - Apple HIG: dashboard, charts, analytics (large radii, soft shadows, system blue, pastels)
+ *   - Notion:    tables, journal, settings, alerts (thin borders, dense layout, neutral accents)
+ *
+ * Both systems support light/dark themes via the `.dark` class on `<html>`.
+ * shadcn/ui tokens (in index.css) stay untouched for backwards compatibility.
+ */
+
+:root {
+  /* ============================================================
+   * Typography (shared)
+   * ============================================================ */
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono',
+    Consolas, monospace;
+  --font-display: var(--font-sans);
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+
+  /* ============================================================
+   * Spacing scale (shared)
+   * ============================================================ */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ============================================================
+   * Apple HIG — light theme
+   * ============================================================ */
+  --apple-radius-sm: 10px;
+  --apple-radius-md: 16px;
+  --apple-radius-lg: 20px;
+  --apple-radius-xl: 28px;
+  --apple-radius-full: 9999px;
+
+  --apple-bg: #f2f2f7;
+  --apple-bg-secondary: #ffffff;
+  --apple-surface: #ffffff;
+  --apple-surface-elevated: #ffffff;
+  --apple-separator: rgba(60, 60, 67, 0.12);
+
+  --apple-text-primary: #1c1c1e;
+  --apple-text-secondary: rgba(60, 60, 67, 0.7);
+  --apple-text-tertiary: rgba(60, 60, 67, 0.45);
+  --apple-text-on-accent: #ffffff;
+
+  --apple-blue: #007aff;
+  --apple-blue-hover: #006fe0;
+  --apple-blue-pastel: #cce4ff;
+
+  --apple-green: #34c759;
+  --apple-green-pastel: #d6f5dc;
+  --apple-orange: #ff9500;
+  --apple-orange-pastel: #ffe4c2;
+  --apple-red: #ff3b30;
+  --apple-red-pastel: #ffd6d3;
+  --apple-yellow: #ffcc00;
+  --apple-yellow-pastel: #fff3bf;
+  --apple-purple: #af52de;
+  --apple-purple-pastel: #ead2f6;
+  --apple-pink: #ff2d55;
+  --apple-pink-pastel: #ffd0db;
+  --apple-teal: #5ac8fa;
+  --apple-teal-pastel: #d4f0fb;
+  --apple-indigo: #5856d6;
+  --apple-indigo-pastel: #d8d7f5;
+
+  /* Layered shadows — composed in `shadow-apple-*` Tailwind utilities */
+  --apple-shadow-sm:
+    0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --apple-shadow-md:
+    0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 10px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  --apple-shadow-lg:
+    0 2px 4px rgba(0, 0, 0, 0.05), 0 12px 28px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  --apple-shadow-xl:
+    0 4px 8px rgba(0, 0, 0, 0.06), 0 24px 48px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+
+  /* ============================================================
+   * Notion — light theme
+   * ============================================================ */
+  --notion-radius-sm: 3px;
+  --notion-radius-md: 4px;
+  --notion-radius-lg: 6px;
+
+  --notion-bg: #ffffff;
+  --notion-bg-secondary: #f7f7f5;
+  --notion-surface: #ffffff;
+  --notion-surface-hover: rgba(55, 53, 47, 0.04);
+  --notion-row-hover: rgba(55, 53, 47, 0.05);
+  --notion-row-stripe: rgba(55, 53, 47, 0.02);
+  --notion-border: rgba(55, 53, 47, 0.09);
+  --notion-border-strong: rgba(55, 53, 47, 0.16);
+
+  --notion-text-default: #37352f;
+  --notion-text-muted: rgba(55, 53, 47, 0.65);
+  --notion-text-subtle: rgba(55, 53, 47, 0.45);
+
+  --notion-accent-blue: #2383e2;
+  --notion-accent-blue-soft: rgba(35, 131, 226, 0.14);
+
+  /* Notion chip palette (light) */
+  --notion-chip-gray-bg: rgba(120, 119, 116, 0.16);
+  --notion-chip-gray-fg: rgba(55, 53, 47, 0.85);
+  --notion-chip-brown-bg: rgba(140, 96, 71, 0.16);
+  --notion-chip-brown-fg: #8a6651;
+  --notion-chip-orange-bg: rgba(245, 144, 71, 0.18);
+  --notion-chip-orange-fg: #c4773c;
+  --notion-chip-yellow-bg: rgba(225, 178, 50, 0.18);
+  --notion-chip-yellow-fg: #b08e26;
+  --notion-chip-green-bg: rgba(82, 154, 110, 0.18);
+  --notion-chip-green-fg: #4f8a6c;
+  --notion-chip-blue-bg: rgba(50, 134, 224, 0.16);
+  --notion-chip-blue-fg: #2c80c4;
+  --notion-chip-purple-bg: rgba(154, 109, 211, 0.16);
+  --notion-chip-purple-fg: #8657c7;
+  --notion-chip-pink-bg: rgba(225, 102, 158, 0.16);
+  --notion-chip-pink-fg: #c75d8e;
+  --notion-chip-red-bg: rgba(229, 79, 73, 0.16);
+  --notion-chip-red-fg: #c44a45;
+
+  --notion-shadow-sm: 0 1px 2px rgba(15, 15, 15, 0.06);
+  --notion-shadow-md:
+    rgba(15, 15, 15, 0.05) 0 0 0 1px, rgba(15, 15, 15, 0.1) 0 3px 6px,
+    rgba(15, 15, 15, 0.2) 0 9px 24px;
+}
+
+/* ================================================================
+ * Dark theme — overrides for both systems
+ * ================================================================ */
+.dark {
+  /* Apple HIG — dark */
+  --apple-bg: #000000;
+  --apple-bg-secondary: #1c1c1e;
+  --apple-surface: #1c1c1e;
+  --apple-surface-elevated: #2c2c2e;
+  --apple-separator: rgba(84, 84, 88, 0.6);
+
+  --apple-text-primary: #ffffff;
+  --apple-text-secondary: rgba(235, 235, 245, 0.6);
+  --apple-text-tertiary: rgba(235, 235, 245, 0.3);
+
+  --apple-blue: #0a84ff;
+  --apple-blue-hover: #399cff;
+  --apple-blue-pastel: rgba(10, 132, 255, 0.25);
+
+  --apple-green: #30d158;
+  --apple-green-pastel: rgba(48, 209, 88, 0.22);
+  --apple-orange: #ff9f0a;
+  --apple-orange-pastel: rgba(255, 159, 10, 0.22);
+  --apple-red: #ff453a;
+  --apple-red-pastel: rgba(255, 69, 58, 0.22);
+  --apple-yellow: #ffd60a;
+  --apple-yellow-pastel: rgba(255, 214, 10, 0.22);
+  --apple-purple: #bf5af2;
+  --apple-purple-pastel: rgba(191, 90, 242, 0.22);
+  --apple-pink: #ff375f;
+  --apple-pink-pastel: rgba(255, 55, 95, 0.22);
+  --apple-teal: #64d2ff;
+  --apple-teal-pastel: rgba(100, 210, 255, 0.22);
+  --apple-indigo: #5e5ce6;
+  --apple-indigo-pastel: rgba(94, 92, 230, 0.22);
+
+  --apple-shadow-sm:
+    0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --apple-shadow-md:
+    0 1px 3px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  --apple-shadow-lg:
+    0 4px 8px rgba(0, 0, 0, 0.5), 0 16px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  --apple-shadow-xl:
+    0 8px 16px rgba(0, 0, 0, 0.55), 0 32px 64px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  /* Notion — dark */
+  --notion-bg: #191919;
+  --notion-bg-secondary: #202020;
+  --notion-surface: #2f2f2f;
+  --notion-surface-hover: rgba(255, 255, 255, 0.055);
+  --notion-row-hover: rgba(255, 255, 255, 0.05);
+  --notion-row-stripe: rgba(255, 255, 255, 0.02);
+  --notion-border: rgba(255, 255, 255, 0.094);
+  --notion-border-strong: rgba(255, 255, 255, 0.16);
+
+  --notion-text-default: rgba(255, 255, 255, 0.9);
+  --notion-text-muted: rgba(255, 255, 255, 0.6);
+  --notion-text-subtle: rgba(255, 255, 255, 0.4);
+
+  --notion-accent-blue: #529cca;
+  --notion-accent-blue-soft: rgba(82, 156, 202, 0.2);
+
+  --notion-chip-gray-bg: rgba(151, 154, 155, 0.25);
+  --notion-chip-gray-fg: rgba(255, 255, 255, 0.85);
+  --notion-chip-brown-bg: rgba(151, 102, 78, 0.4);
+  --notion-chip-brown-fg: #c0a18c;
+  --notion-chip-orange-bg: rgba(217, 115, 13, 0.4);
+  --notion-chip-orange-fg: #ffa566;
+  --notion-chip-yellow-bg: rgba(203, 145, 47, 0.4);
+  --notion-chip-yellow-fg: #f0c674;
+  --notion-chip-green-bg: rgba(67, 122, 99, 0.4);
+  --notion-chip-green-fg: #7cc29b;
+  --notion-chip-blue-bg: rgba(56, 122, 174, 0.4);
+  --notion-chip-blue-fg: #80b8e6;
+  --notion-chip-purple-bg: rgba(127, 102, 213, 0.4);
+  --notion-chip-purple-fg: #b39bf5;
+  --notion-chip-pink-bg: rgba(193, 76, 138, 0.4);
+  --notion-chip-pink-fg: #e896bf;
+  --notion-chip-red-bg: rgba(193, 76, 76, 0.4);
+  --notion-chip-red-fg: #f08e8e;
+
+  --notion-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --notion-shadow-md:
+    rgba(0, 0, 0, 0.4) 0 0 0 1px, rgba(0, 0, 0, 0.35) 0 3px 6px,
+    rgba(0, 0, 0, 0.55) 0 9px 24px;
+}
+
+/* ================================================================
+ * Surface helper classes — opt-in per page
+ * ================================================================ */
+.surface-apple {
+  background-color: var(--apple-bg);
+  color: var(--apple-text-primary);
+  font-family: var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+}
+
+.surface-notion {
+  background-color: var(--notion-bg);
+  color: var(--notion-text-default);
+  font-family: var(--font-sans);
+}
+
+/* Tabular numerals for Notion data tables */
+.notion-numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
