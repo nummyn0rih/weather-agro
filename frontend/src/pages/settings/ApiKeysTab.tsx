@@ -49,10 +49,21 @@ export function ApiKeysTab() {
     mutation.mutate({ openweathermap_api_key: '' });
   };
 
+  const inputClass =
+    'rounded-notion-sm border-notion-border bg-notion-bg font-mono text-notion-text placeholder:text-notion-text-subtle focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const labelClass =
+    'text-[11px] font-medium uppercase tracking-wide text-notion-text-muted';
+  const outlineBtn =
+    'rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const primaryBtn =
+    'rounded-notion-sm bg-notion-accent-blue text-white transition-colors hover:bg-notion-accent-blue/90 focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="owm-key">OpenWeatherMap API Key</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="owm-key" className={labelClass}>
+          OpenWeatherMap API Key
+        </Label>
         <Input
           id="owm-key"
           type="text"
@@ -64,8 +75,9 @@ export function ApiKeysTab() {
             setDraftKey(e.target.value);
             setEdited(true);
           }}
+          className={inputClass}
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-notion-text-muted">
           Текущее значение замаскировано (последние 4 символа). Чтобы
           сохранить ключ, очистите поле и введите новое значение.
         </p>
@@ -76,10 +88,15 @@ export function ApiKeysTab() {
           variant="outline"
           onClick={handleClear}
           disabled={mutation.isPending || !keysQuery.data.openweathermap_api_key}
+          className={outlineBtn}
         >
           Очистить ключ
         </Button>
-        <Button type="submit" disabled={!edited || mutation.isPending}>
+        <Button
+          type="submit"
+          disabled={!edited || mutation.isPending}
+          className={primaryBtn}
+        >
           {mutation.isPending ? 'Сохранение…' : 'Сохранить'}
         </Button>
       </div>

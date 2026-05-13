@@ -53,9 +53,9 @@ function isTabValue(v: string | null): v is TabValue {
 function TabSkeleton() {
   return (
     <div className="space-y-3">
-      <Skeleton className="h-4 w-32" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-4 w-32 rounded-notion-sm bg-notion-surface-hover" />
+      <Skeleton className="h-10 w-full rounded-notion-sm bg-notion-surface-hover" />
+      <Skeleton className="h-10 w-full rounded-notion-sm bg-notion-surface-hover" />
     </div>
   );
 }
@@ -101,31 +101,50 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="flex h-full flex-col gap-6 p-4 md:p-8">
+    <div className="surface-notion flex h-full flex-col gap-6 p-6 md:p-8">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Настройки</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight text-notion-text">
+          Настройки
+        </h1>
+        <p className="text-sm text-notion-text-muted">
           Источники данных, секреты, Telegram-бот, бэкапы, культуры и
           параметры аккаунта.
         </p>
       </header>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="h-auto flex-wrap justify-start">
-            {visibleTabs.map((tab) => (
-              <TabsTrigger key={tab} value={tab}>
-                {TAB_LABELS[tab]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        orientation="vertical"
+        className="flex flex-col gap-6 md:flex-row md:gap-8"
+      >
+        <div className="md:w-56 md:shrink-0">
+          <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:overflow-visible md:px-0">
+            <TabsList className="inline-flex h-auto w-max flex-row gap-0.5 rounded-none bg-transparent p-0 text-notion-text-muted md:sticky md:top-4 md:flex md:w-full md:flex-col md:items-stretch md:gap-0.5 md:border-l md:border-notion-border md:bg-transparent md:p-0">
+              {visibleTabs.map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className="rounded-notion-sm px-3 py-1.5 text-sm font-normal text-notion-text-muted shadow-none transition-colors hover:bg-notion-row-hover hover:text-notion-text data-[state=active]:bg-notion-surface-hover data-[state=active]:text-notion-text data-[state=active]:shadow-none md:justify-start md:rounded-none md:rounded-r-notion-sm md:border-l-2 md:border-transparent md:px-3 md:py-2 md:data-[state=active]:border-notion-text md:data-[state=active]:font-medium md:data-[state=active]:bg-notion-surface-hover"
+                >
+                  {TAB_LABELS[tab]}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
         </div>
 
-        {visibleTabs.map((tab) => (
-          <TabsContent key={tab} value={tab} className="max-w-2xl">
-            <Suspense fallback={<TabSkeleton />}>{renderTab(tab)}</Suspense>
-          </TabsContent>
-        ))}
+        <div className="min-w-0 flex-1">
+          {visibleTabs.map((tab) => (
+            <TabsContent
+              key={tab}
+              value={tab}
+              className="mt-0 max-w-2xl text-notion-text"
+            >
+              <Suspense fallback={<TabSkeleton />}>{renderTab(tab)}</Suspense>
+            </TabsContent>
+          ))}
+        </div>
       </Tabs>
     </div>
   );

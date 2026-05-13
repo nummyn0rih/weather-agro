@@ -49,10 +49,21 @@ export function TelegramTab() {
     mutation.mutate({ bot_token: '' });
   };
 
+  const inputClass =
+    'rounded-notion-sm border-notion-border bg-notion-bg font-mono text-notion-text placeholder:text-notion-text-subtle focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const labelClass =
+    'text-[11px] font-medium uppercase tracking-wide text-notion-text-muted';
+  const outlineBtn =
+    'rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const primaryBtn =
+    'rounded-notion-sm bg-notion-accent-blue text-white transition-colors hover:bg-notion-accent-blue/90 focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="tg-token">Telegram Bot Token</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="tg-token" className={labelClass}>
+          Telegram Bot Token
+        </Label>
         <Input
           id="tg-token"
           type="text"
@@ -64,8 +75,9 @@ export function TelegramTab() {
             setDraftToken(e.target.value);
             setEdited(true);
           }}
+          className={inputClass}
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-notion-text-muted">
           Получите токен у @BotFather. Привязка пользователя к чату
           выполняется через вкладку «Профиль».
         </p>
@@ -76,10 +88,15 @@ export function TelegramTab() {
           variant="outline"
           onClick={handleClear}
           disabled={mutation.isPending || !tgQuery.data.bot_token}
+          className={outlineBtn}
         >
           Очистить токен
         </Button>
-        <Button type="submit" disabled={!edited || mutation.isPending}>
+        <Button
+          type="submit"
+          disabled={!edited || mutation.isPending}
+          className={primaryBtn}
+        >
           {mutation.isPending ? 'Сохранение…' : 'Сохранить'}
         </Button>
       </div>

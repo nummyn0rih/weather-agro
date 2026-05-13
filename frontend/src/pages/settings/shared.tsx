@@ -32,8 +32,8 @@ export function FormSkeleton({ rows = 4 }: { rows?: number }) {
     <div className="space-y-4">
       {Array.from({ length: rows }).map((_, idx) => (
         <div key={idx} className="space-y-2">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-3 w-32 rounded-notion-sm bg-notion-surface-hover" />
+          <Skeleton className="h-9 w-full rounded-notion-sm bg-notion-surface-hover" />
         </div>
       ))}
     </div>
@@ -42,18 +42,18 @@ export function FormSkeleton({ rows = 4 }: { rows?: number }) {
 
 export function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="rounded-md border border-destructive/50 bg-destructive/5 p-4">
-      <p className="text-sm font-medium text-destructive">
+    <div className="rounded-notion-md border border-notion-border bg-[var(--notion-chip-red-bg)]/40 p-4">
+      <p className="text-sm font-medium text-[var(--notion-chip-red-fg)]">
         Не удалось загрузить данные
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">{message}</p>
+      <p className="mt-1 text-sm text-notion-text-muted">{message}</p>
     </div>
   );
 }
 
 export function EmptyBox({ message }: { message: string }) {
   return (
-    <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+    <div className="rounded-notion-md border border-dashed border-notion-border bg-notion-bg-secondary p-6 text-center text-sm text-notion-text-muted">
       {message}
     </div>
   );
@@ -61,7 +61,7 @@ export function EmptyBox({ message }: { message: string }) {
 
 export function AdminOnlyNotice() {
   return (
-    <div className="rounded-md border p-6 text-sm text-muted-foreground">
+    <div className="rounded-notion-md border border-notion-border bg-notion-bg-secondary p-6 text-sm text-notion-text-muted">
       Раздел доступен только администраторам.
     </div>
   );

@@ -157,6 +157,22 @@ export function CropsTab() {
   const data = cropsQuery.data;
   const isMutating = createMutation.isPending || updateMutation.isPending;
 
+  const inputClass =
+    'rounded-notion-sm border-notion-border bg-notion-bg text-notion-text placeholder:text-notion-text-subtle focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const numInputClass = `notion-numeric font-mono ${inputClass}`;
+  const labelClass =
+    'text-[11px] font-medium uppercase tracking-wide text-notion-text-muted';
+  const outlineBtn =
+    'rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const primaryBtn =
+    'rounded-notion-sm bg-notion-accent-blue text-white transition-colors hover:bg-notion-accent-blue/90 focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const ghostIconBtn =
+    'h-7 w-7 rounded-notion-sm text-notion-text-muted transition-colors hover:bg-notion-row-hover hover:text-notion-text focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const dialogContentClass =
+    'rounded-notion-md border-notion-border bg-notion-bg text-notion-text shadow-notion-md';
+  const dialogTitleClass = 'text-notion-text';
+  const dialogDescClass = 'text-notion-text-muted';
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -164,6 +180,7 @@ export function CropsTab() {
           onClick={() =>
             setEditing({ mode: 'create', crop: null, form: EMPTY_FORM })
           }
+          className={primaryBtn}
         >
           <Plus className="mr-2 h-4 w-4" />
           Добавить культуру
@@ -173,28 +190,41 @@ export function CropsTab() {
       {data.length === 0 ? (
         <EmptyBox message="Культуры ещё не добавлены." />
       ) : (
-        <div className="rounded-md border overflow-x-auto">
+        <div className="overflow-hidden overflow-x-auto rounded-notion-md border border-notion-border bg-notion-bg">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Название</TableHead>
-                <TableHead className="text-right">Базовая T° (GDD)</TableHead>
-                <TableHead className="text-right">Опт. мин.</TableHead>
-                <TableHead className="text-right">Опт. макс.</TableHead>
+            <TableHeader className="sticky top-0 z-10 bg-notion-bg-secondary">
+              <TableRow className="border-notion-border hover:bg-transparent">
+                <TableHead className="text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
+                  Название
+                </TableHead>
+                <TableHead className="text-right text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
+                  Базовая T° (GDD)
+                </TableHead>
+                <TableHead className="text-right text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
+                  Опт. мин.
+                </TableHead>
+                <TableHead className="text-right text-[11px] font-medium uppercase tracking-wide text-notion-text-muted">
+                  Опт. макс.
+                </TableHead>
                 <TableHead className="w-[110px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map((crop) => (
-                <TableRow key={crop.id}>
-                  <TableCell className="font-medium">{crop.name}</TableCell>
-                  <TableCell className="text-right">
+                <TableRow
+                  key={crop.id}
+                  className="border-notion-border transition-colors hover:bg-notion-row-hover"
+                >
+                  <TableCell className="font-medium text-notion-text">
+                    {crop.name}
+                  </TableCell>
+                  <TableCell className="notion-numeric text-right font-mono text-notion-text">
                     {crop.base_temperature}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="notion-numeric text-right font-mono text-notion-text">
                     {crop.optimal_temp_min ?? '—'}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="notion-numeric text-right font-mono text-notion-text">
                     {crop.optimal_temp_max ?? '—'}
                   </TableCell>
                   <TableCell>
@@ -210,16 +240,18 @@ export function CropsTab() {
                             form: toForm(crop),
                           })
                         }
+                        className={ghostIconBtn}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         aria-label="Удалить"
                         onClick={() => setDeleteTarget(crop)}
+                        className={ghostIconBtn}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -236,21 +268,23 @@ export function CropsTab() {
           if (!open) setEditing(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className={dialogContentClass}>
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className={dialogTitleClass}>
               {editing?.mode === 'edit'
                 ? `Редактировать «${editing.crop?.name ?? ''}»`
                 : 'Новая культура'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className={dialogDescClass}>
               Базовая температура используется для расчёта GDD.
             </DialogDescription>
           </DialogHeader>
           {editing && (
             <form id="crop-form" onSubmit={handleSubmit} className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="crop-name">Название</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="crop-name" className={labelClass}>
+                  Название
+                </Label>
                 <Input
                   id="crop-name"
                   value={editing.form.name}
@@ -261,10 +295,13 @@ export function CropsTab() {
                     })
                   }
                   required
+                  className={inputClass}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="crop-base">Базовая T° (°C)</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="crop-base" className={labelClass}>
+                  Базовая T° (°C)
+                </Label>
                 <Input
                   id="crop-base"
                   type="number"
@@ -280,11 +317,14 @@ export function CropsTab() {
                     })
                   }
                   required
+                  className={numInputClass}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="crop-min">Опт. мин. (°C)</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="crop-min" className={labelClass}>
+                    Опт. мин. (°C)
+                  </Label>
                   <Input
                     id="crop-min"
                     type="number"
@@ -299,10 +339,13 @@ export function CropsTab() {
                         },
                       })
                     }
+                    className={numInputClass}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="crop-max">Опт. макс. (°C)</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="crop-max" className={labelClass}>
+                    Опт. макс. (°C)
+                  </Label>
                   <Input
                     id="crop-max"
                     type="number"
@@ -317,6 +360,7 @@ export function CropsTab() {
                         },
                       })
                     }
+                    className={numInputClass}
                   />
                 </div>
               </div>
@@ -327,10 +371,16 @@ export function CropsTab() {
               variant="outline"
               onClick={() => setEditing(null)}
               disabled={isMutating}
+              className={outlineBtn}
             >
               Отмена
             </Button>
-            <Button form="crop-form" type="submit" disabled={isMutating}>
+            <Button
+              form="crop-form"
+              type="submit"
+              disabled={isMutating}
+              className={primaryBtn}
+            >
               {isMutating ? 'Сохранение…' : 'Сохранить'}
             </Button>
           </DialogFooter>
@@ -343,17 +393,22 @@ export function CropsTab() {
           if (!open) setDeleteTarget(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogContentClass}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить культуру?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className={dialogTitleClass}>
+              Удалить культуру?
+            </AlertDialogTitle>
+            <AlertDialogDescription className={dialogDescClass}>
               {deleteTarget
                 ? `Культура «${deleteTarget.name}» будет удалена. Если на неё ссылаются события или локации — backend вернёт 409.`
                 : ''}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteMutation.isPending}>
+            <AlertDialogCancel
+              disabled={deleteMutation.isPending}
+              className={outlineBtn}
+            >
               Отмена
             </AlertDialogCancel>
             <AlertDialogAction
@@ -362,6 +417,7 @@ export function CropsTab() {
                 if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
               }}
               disabled={deleteMutation.isPending}
+              className="rounded-notion-sm bg-[var(--notion-chip-red-fg)] text-white transition-colors hover:bg-[var(--notion-chip-red-fg)]/90"
             >
               Удалить
             </AlertDialogAction>

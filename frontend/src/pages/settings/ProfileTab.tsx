@@ -93,27 +93,39 @@ export function ProfileTab() {
     }
   };
 
+  const inputClass =
+    'rounded-notion-sm border-notion-border bg-notion-bg text-notion-text placeholder:text-notion-text-subtle focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const labelClass =
+    'text-[11px] font-medium uppercase tracking-wide text-notion-text-muted';
+  const primaryBtn =
+    'rounded-notion-sm bg-notion-accent-blue text-white transition-colors hover:bg-notion-accent-blue/90 focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const outlineBtn =
+    'rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+
   return (
-    <div className="space-y-10">
-      <section className="space-y-3">
-        <div>
-          <h3 className="text-sm font-medium">Профиль</h3>
-          <p className="text-xs text-muted-foreground">
-            Имя пользователя: <span className="font-medium">{username}</span>
-          </p>
-        </div>
+    <div className="space-y-8">
+      <section className="space-y-2">
+        <h3 className="text-sm font-medium text-notion-text">Профиль</h3>
+        <p className="text-xs text-notion-text-muted">
+          Имя пользователя:{' '}
+          <span className="font-medium text-notion-text">{username}</span>
+        </p>
       </section>
 
-      <section className="space-y-4 border-t pt-6">
+      <section className="space-y-4 border-t border-notion-border pt-6">
         <div>
-          <h3 className="text-sm font-medium">Смена пароля</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="text-sm font-medium text-notion-text">
+            Смена пароля
+          </h3>
+          <p className="text-xs text-notion-text-muted">
             После смены пароля все ранее выданные токены инвалидируются.
           </p>
         </div>
         <form onSubmit={handlePasswordSubmit} className="space-y-3">
-          <div className="space-y-2">
-            <Label htmlFor="old-pwd">Текущий пароль</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="old-pwd" className={labelClass}>
+              Текущий пароль
+            </Label>
             <Input
               id="old-pwd"
               type="password"
@@ -121,10 +133,13 @@ export function ProfileTab() {
               value={oldPwd}
               onChange={(e) => setOldPwd(e.target.value)}
               required
+              className={inputClass}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="new-pwd">Новый пароль (≥ 8 символов)</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-pwd" className={labelClass}>
+              Новый пароль (≥ 8 символов)
+            </Label>
             <Input
               id="new-pwd"
               type="password"
@@ -133,10 +148,13 @@ export function ProfileTab() {
               onChange={(e) => setNewPwd(e.target.value)}
               required
               minLength={8}
+              className={inputClass}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-pwd">Повторите новый пароль</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm-pwd" className={labelClass}>
+              Повторите новый пароль
+            </Label>
             <Input
               id="confirm-pwd"
               type="password"
@@ -145,6 +163,7 @@ export function ProfileTab() {
               onChange={(e) => setConfirmPwd(e.target.value)}
               required
               minLength={8}
+              className={inputClass}
             />
           </div>
           <div className="flex justify-end">
@@ -156,6 +175,7 @@ export function ProfileTab() {
                 newPwd === '' ||
                 confirmPwd === ''
               }
+              className={primaryBtn}
             >
               {passwordMutation.isPending ? 'Сохранение…' : 'Сменить пароль'}
             </Button>
@@ -163,10 +183,10 @@ export function ProfileTab() {
         </form>
       </section>
 
-      <section className="space-y-4 border-t pt-6">
+      <section className="space-y-4 border-t border-notion-border pt-6">
         <div>
-          <h3 className="text-sm font-medium">Telegram</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="text-sm font-medium text-notion-text">Telegram</h3>
+          <p className="text-xs text-notion-text-muted">
             Привяжите аккаунт к боту, чтобы получать алерты в Telegram.
           </p>
         </div>
@@ -175,17 +195,21 @@ export function ProfileTab() {
         ) : statusQuery.isError ? (
           <ErrorBox message={getErrorMessage(statusQuery.error)} />
         ) : statusQuery.data.bound ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-notion-md border border-notion-border bg-notion-bg-secondary p-3 transition-colors hover:bg-notion-surface-hover">
             <div>
-              <p className="text-sm font-medium">Привязан</p>
-              <p className="text-xs text-muted-foreground">
-                chat_id: <code>{statusQuery.data.chat_id}</code>
+              <p className="text-sm font-medium text-notion-text">Привязан</p>
+              <p className="text-xs text-notion-text-muted">
+                chat_id:{' '}
+                <code className="notion-numeric font-mono text-notion-text">
+                  {statusQuery.data.chat_id}
+                </code>
               </p>
             </div>
             <Button
               variant="outline"
               onClick={() => unbindMutation.mutate()}
               disabled={unbindMutation.isPending}
+              className={outlineBtn}
             >
               <Link2Off className="mr-2 h-4 w-4" />
               Отвязать
@@ -197,17 +221,24 @@ export function ProfileTab() {
               type="button"
               onClick={() => issueMutation.mutate()}
               disabled={issueMutation.isPending}
+              className={primaryBtn}
             >
               {issueMutation.isPending ? 'Генерация…' : 'Привязать Telegram'}
             </Button>
             {bindCode && (
-              <div className="rounded-md border p-3 space-y-2">
-                <p className="text-sm">
+              <div className="space-y-2 rounded-notion-md border border-notion-border bg-notion-bg-secondary p-3">
+                <p className="text-sm text-notion-text">
                   Отправьте боту команду{' '}
-                  <code>/start {bindCode.code}</code>
+                  <code className="font-mono text-notion-text">
+                    /start {bindCode.code}
+                  </code>
                 </p>
                 <div className="flex items-center gap-2">
-                  <Input value={bindCode.code} readOnly />
+                  <Input
+                    value={bindCode.code}
+                    readOnly
+                    className={`${inputClass} notion-numeric font-mono`}
+                  />
                   <Button
                     type="button"
                     variant="outline"
@@ -216,11 +247,12 @@ export function ProfileTab() {
                       void copyCode();
                     }}
                     aria-label="Скопировать код"
+                    className={outlineBtn}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-notion-text-muted">
                   Код действует до{' '}
                   {new Date(bindCode.expires_at).toLocaleString('ru-RU')}.
                 </p>

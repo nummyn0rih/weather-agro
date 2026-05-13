@@ -83,22 +83,33 @@ export function SourcesTab() {
   const isDirty =
     JSON.stringify(draft) !== JSON.stringify(sourcesQuery.data);
 
+  const switchClass =
+    'h-5 w-9 data-[state=checked]:bg-notion-accent-blue data-[state=unchecked]:bg-notion-border-strong [&>span]:h-4 [&>span]:w-4 [&>span]:data-[state=checked]:translate-x-4';
+  const outlineBtn =
+    'rounded-notion-sm border-notion-border bg-notion-bg text-notion-text transition-colors hover:bg-notion-row-hover focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+  const primaryBtn =
+    'rounded-notion-sm bg-notion-accent-blue text-white transition-colors hover:bg-notion-accent-blue/90 focus-visible:ring-1 focus-visible:ring-notion-accent-blue focus-visible:ring-offset-0';
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-medium">Приоритет источников</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="text-sm font-medium text-notion-text">
+            Приоритет источников
+          </h3>
+          <p className="text-xs text-notion-text-muted">
             Порядок определяет, какой источник используется по умолчанию.
           </p>
         </div>
-        <ul className="rounded-md border">
+        <ul className="overflow-hidden rounded-notion-md border border-notion-border bg-notion-bg">
           {draft.priority.map((src, idx) => (
             <li
               key={src}
-              className="flex items-center justify-between gap-2 border-b px-3 py-2 last:border-b-0"
+              className="flex items-center justify-between gap-2 border-b border-notion-border px-3 py-2 transition-colors last:border-b-0 hover:bg-notion-row-hover"
             >
-              <span className="text-sm font-medium">{SOURCE_LABEL[src]}</span>
+              <span className="text-sm font-medium text-notion-text">
+                {SOURCE_LABEL[src]}
+              </span>
               <div className="flex gap-1">
                 <Button
                   type="button"
@@ -107,8 +118,9 @@ export function SourcesTab() {
                   onClick={() => move(idx, -1)}
                   disabled={idx === 0}
                   aria-label="Выше"
+                  className={`h-7 w-7 ${outlineBtn}`}
                 >
-                  <ArrowUp className="h-4 w-4" />
+                  <ArrowUp className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   type="button"
@@ -117,8 +129,9 @@ export function SourcesTab() {
                   onClick={() => move(idx, 1)}
                   disabled={idx === draft.priority.length - 1}
                   aria-label="Ниже"
+                  className={`h-7 w-7 ${outlineBtn}`}
                 >
-                  <ArrowDown className="h-4 w-4" />
+                  <ArrowDown className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </li>
@@ -127,16 +140,18 @@ export function SourcesTab() {
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-medium">Активные источники</h3>
-        <div className="space-y-2">
-          {ALL_SOURCES.map((src) => (
+        <h3 className="text-sm font-medium text-notion-text">
+          Активные источники
+        </h3>
+        <div className="overflow-hidden rounded-notion-md border border-notion-border bg-notion-bg">
+          {ALL_SOURCES.map((src, idx) => (
             <div
               key={src}
-              className="flex items-center justify-between rounded-md border px-3 py-2"
+              className={`flex items-center justify-between px-3 py-2 transition-colors hover:bg-notion-row-hover ${idx > 0 ? 'border-t border-notion-border' : ''}`}
             >
               <Label
                 htmlFor={`enabled-${src}`}
-                className="text-sm font-medium"
+                className="cursor-pointer text-sm font-medium text-notion-text"
               >
                 {SOURCE_LABEL[src]}
               </Label>
@@ -144,6 +159,7 @@ export function SourcesTab() {
                 id={`enabled-${src}`}
                 checked={draft.enabled[src] ?? false}
                 onCheckedChange={(v) => toggleEnabled(src, v)}
+                className={switchClass}
               />
             </div>
           ))}
@@ -151,23 +167,27 @@ export function SourcesTab() {
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+        <div className="flex items-center justify-between rounded-notion-md border border-notion-border bg-notion-bg px-3 py-2 transition-colors hover:bg-notion-row-hover">
           <div>
             <Label
               htmlFor="average-mode"
-              className="text-sm font-medium"
+              className="cursor-pointer text-sm font-medium text-notion-text"
             >
               Режим усреднения
             </Label>
-            <p className="text-xs text-muted-foreground">
-              GET с <code>source=average</code> возвращает среднее по
-              источникам.
+            <p className="text-xs text-notion-text-muted">
+              GET с{' '}
+              <code className="font-mono text-notion-text">
+                source=average
+              </code>{' '}
+              возвращает среднее по источникам.
             </p>
           </div>
           <Switch
             id="average-mode"
             checked={draft.average_mode}
             onCheckedChange={(v) => setDraft({ ...draft, average_mode: v })}
+            className={switchClass}
           />
         </div>
       </section>
@@ -181,10 +201,15 @@ export function SourcesTab() {
             setDraft(structuredClone(sourcesQuery.data))
           }
           disabled={!isDirty || mutation.isPending}
+          className={outlineBtn}
         >
           Сбросить
         </Button>
-        <Button type="submit" disabled={!isDirty || mutation.isPending}>
+        <Button
+          type="submit"
+          disabled={!isDirty || mutation.isPending}
+          className={primaryBtn}
+        >
           {mutation.isPending ? 'Сохранение…' : 'Сохранить'}
         </Button>
       </div>
