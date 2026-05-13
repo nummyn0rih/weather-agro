@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence } from 'framer-motion';
 import {
   BarChart3,
   BellRing,
@@ -19,6 +20,7 @@ import {
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
+import { PageTransition } from '@/components/motion/PageTransition';
 import { Button } from '@/components/ui/button';
 import { logout as logoutRequest } from '@/lib/auth-api';
 import { cn } from '@/lib/utils';
@@ -158,7 +160,11 @@ export function AppLayout() {
           </div>
         </header>
         <main className="flex-1 min-w-0">
-          <Outlet />
+          <AnimatePresence mode="wait" initial={false}>
+            <PageTransition key={location.pathname} className="h-full">
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </main>
       </div>
     </div>

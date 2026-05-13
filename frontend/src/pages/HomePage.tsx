@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { AlertsBlock } from '@/components/dashboard/AlertsBlock';
 import { ForecastBlock } from '@/components/dashboard/ForecastBlock';
 import { LocationCard } from '@/components/dashboard/LocationCard';
+import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -100,28 +101,33 @@ export function HomePage() {
       ) : locations.length === 0 ? (
         <EmptyLocations />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <StaggerGroup className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {locations.map((loc, idx) => {
             const q = weatherQueries[idx];
             const points: WeatherDailyPoint[] = q?.data ?? [];
             const loading =
               loc.import_status === 'done' && (q?.isLoading ?? false);
             return (
-              <LocationCard
-                key={loc.id}
-                location={loc}
-                points={points}
-                loading={loading}
-              />
+              <StaggerItem key={loc.id}>
+                <LocationCard
+                  location={loc}
+                  points={points}
+                  loading={loading}
+                />
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGroup>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <AlertsBlock />
-        <ForecastBlock locations={locations} />
-      </div>
+      <StaggerGroup className="grid gap-5 lg:grid-cols-2">
+        <StaggerItem>
+          <AlertsBlock />
+        </StaggerItem>
+        <StaggerItem>
+          <ForecastBlock locations={locations} />
+        </StaggerItem>
+      </StaggerGroup>
     </div>
   );
 }

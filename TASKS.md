@@ -1269,11 +1269,11 @@ security choice: если у злоумышленника был токен ДО
 
 **DoD:**
 
-- [ ] Framer Motion подключён
-- [ ] Плавные переходы между страницами (fade)
-- [ ] Анимация появления карточек (stagger)
-- [ ] Toast-уведомления (sonner / shadcn toast)
-- [ ] Loading states унифицированы
+- [x] Framer Motion подключён
+- [x] Плавные переходы между страницами (fade)
+- [x] Анимация появления карточек (stagger)
+- [x] Toast-уведомления (sonner / shadcn toast)
+- [x] Loading states унифицированы
 
 ### 7.9 🎨 FE-V — Финальная адаптивная проверка
 
