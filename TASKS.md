@@ -1211,15 +1211,15 @@ security choice: если у злоумышленника был токен ДО
 - [x] Тёмная тема выглядит как iOS dark mode
 - [x] Логика не изменена (diff только в стилях/классах)
 
-### 7.3 🎨 FE-V — Apple HIG: Layout (sidebar, header)
+### 7.3 🎨 FE-V — Apple HIG: Layout (sidebar, header) ✅
 
 **Зависит от:** → 2.4, 7.1
 **DoD:**
 
-- [ ] Sidebar: полупрозрачность, blur backdrop
-- [ ] Иконки в стиле SF Symbols (lucide-react с подходящим набором)
-- [ ] Плавные переходы при сворачивании sidebar
-- [ ] Mobile drawer с анимацией slide
+- [x] Sidebar: полупрозрачность, blur backdrop
+- [x] Иконки в стиле SF Symbols (lucide-react с подходящим набором)
+- [x] Плавные переходы при сворачивании sidebar
+- [x] Mobile drawer с анимацией slide
 
 ### 7.4 🎨 FE-V — Apple HIG: Графики и Аналитика
 

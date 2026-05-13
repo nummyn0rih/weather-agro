@@ -76,21 +76,21 @@ export function AppLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-card md:flex">
+    <div className="flex min-h-screen bg-apple-bg text-apple-text">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-apple-separator bg-apple-surface/70 backdrop-blur-xl backdrop-saturate-150 transition-[width,background-color] duration-300 ease-apple supports-[backdrop-filter]:bg-apple-surface/60 md:flex">
         <SidebarContent isAdmin={isAdmin} />
       </aside>
 
       {isDrawerOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal>
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 ease-apple"
             onClick={() => setIsDrawerOpen(false)}
             aria-hidden
           />
-          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col border-r bg-card shadow-xl">
-            <div className="flex items-center justify-between px-4 py-3 border-b">
-              <span className="text-sm font-semibold tracking-tight">
+          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col border-r border-apple-separator bg-apple-surface/85 backdrop-blur-xl backdrop-saturate-150 shadow-apple-xl animate-in slide-in-from-left duration-300 ease-apple supports-[backdrop-filter]:bg-apple-surface/75">
+            <div className="flex items-center justify-between border-b border-apple-separator px-4 py-3">
+              <span className="text-sm font-semibold tracking-apple-tight text-apple-text">
                 Weather Agro
               </span>
               <Button
@@ -98,6 +98,7 @@ export function AppLayout() {
                 size="icon"
                 onClick={() => setIsDrawerOpen(false)}
                 aria-label="Закрыть меню"
+                className="rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -108,18 +109,18 @@ export function AppLayout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-card px-4 py-3 md:px-6">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-apple-separator bg-apple-surface/70 px-4 py-3 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-apple-surface/60 md:px-6">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0 md:hidden"
               onClick={() => setIsDrawerOpen(true)}
               aria-label="Открыть меню"
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="text-sm font-semibold tracking-tight md:hidden">
+            <span className="text-sm font-semibold tracking-apple-tight text-apple-text md:hidden">
               Weather Agro
             </span>
           </div>
@@ -133,6 +134,7 @@ export function AppLayout() {
                   ? 'Переключить на светлую тему'
                   : 'Переключить на тёмную тему'
               }
+              className="rounded-apple-full text-apple-text-secondary transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0"
             >
               {theme === 'dark' ? (
                 <Sun className="h-5 w-5" />
@@ -141,11 +143,16 @@ export function AppLayout() {
               )}
             </Button>
             {username && (
-              <span className="hidden text-sm text-muted-foreground sm:inline">
+              <span className="hidden text-sm text-apple-text-secondary sm:inline">
                 {username}
               </span>
             )}
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="rounded-apple-full border-apple-separator bg-apple-surface/80 text-apple-blue transition-colors duration-200 ease-apple hover:bg-apple-blue-pastel hover:text-apple-blue focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0"
+            >
               Выйти
             </Button>
           </div>
@@ -168,13 +175,13 @@ function SidebarContent({ showHeader = true, isAdmin }: SidebarContentProps) {
   return (
     <>
       {showHeader && (
-        <div className="px-4 py-4 border-b">
-          <span className="text-sm font-semibold tracking-tight">
+        <div className="border-b border-apple-separator px-4 py-4">
+          <span className="text-base font-semibold tracking-apple-tight text-apple-text">
             Weather Agro
           </span>
         </div>
       )}
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
+      <nav className="flex-1 overflow-y-auto px-2 py-4">
         <ul className="flex flex-col gap-1">
           {items.map((item) => (
             <li key={item.to}>
@@ -183,14 +190,14 @@ function SidebarContent({ showHeader = true, isAdmin }: SidebarContentProps) {
                 end={item.end}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+                    'flex items-center gap-3 rounded-apple-md px-3 py-2 text-sm transition-all duration-200 ease-apple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue focus-visible:ring-offset-0',
                     isActive
-                      ? 'bg-accent text-accent-foreground font-medium'
-                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                      ? 'bg-apple-blue-pastel font-medium text-apple-blue'
+                      : 'text-apple-text-secondary hover:bg-apple-blue-pastel/60 hover:text-apple-text',
                   )
                 }
               >
-                <item.icon className="h-4 w-4" aria-hidden />
+                <item.icon className="h-[18px] w-[18px] shrink-0" aria-hidden strokeWidth={1.75} />
                 <span>{item.label}</span>
               </NavLink>
             </li>
